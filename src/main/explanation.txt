@@ -1,0 +1,4 @@
+this is an internal document explaining how the thing works (poorly)
+
+
+the statemachine handles all ingoing and outgoing information between the bus and alu
