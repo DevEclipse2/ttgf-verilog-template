@@ -14,9 +14,7 @@ module alu(
 
     output reg command_req_new,
     input  wire command_data_sent,
-
-
-
+    
     output reg macro_op_complete,
     output reg executed_jump,
 
