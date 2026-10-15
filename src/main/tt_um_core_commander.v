@@ -15,14 +15,14 @@ module tt_um_core_commander (
     output wire o_microcode_fence,  //this pauses cpu execution after each micro operation
     output wire o_direct_instruction, //bypasses command buffers
     output wire show_tracker, 
-
+    output reg  purge_microcode,
+    input  wire purge_microcode_ack,
     output reg [1:0] register_read_stage,
     output reg [2:0] register_read_id,
     output reg is_read,
     output reg single_execute,
-    input wire single_execute_ack,
-    output wire soft_reset,//to the cpu
-    output reg [1:0] thread_select
+    input  wire single_execute_ack,
+    output reg [1:0] thread_select //this manages shadow volumes but hush
 );
     
 
@@ -81,6 +81,7 @@ end
             showing_errors          <= 1'b0;
             showing_microcode_miss  <= 1'b0;
             freeze_core             <= 1'b0;
+            purge_microcode         <= 1'b0;
         end
         else begin
             
@@ -88,14 +89,15 @@ end
                 if(single_execute_ack) begin
                     single_execute <= 1'b0;                
                 end
-
+                if(purge_microcode_ack) begin
+                    purge_microcode <= 1'b0;
+                end
 
                 if(cmd_opcode == 4'b0000) begin
                     command_op_ack <= 1'b0;
                     //set operation ack to 0
                     //statemachine below
                     //pumps the registers
-
                     // if showing errors, dont do this
                     if(!showing_errors && !showing_microcode_miss) begin
                         case(controller_state)
@@ -320,7 +322,7 @@ end
                         showing_microcode_miss <= 1'b0;
                         showing_errors <= 1'b0;
                     end
-                    4'b1100: //purge microcode
+                    4'b1100: purge_microcode <= 1'b1;//purge microcode
                     4'b1101: begin
                         showing_microcode_miss <= 1'b0;
                         showing_errors <= ~showing_errors;
@@ -333,9 +335,6 @@ end
                         showing_microcode_miss <= ~showing_microcode_miss;
                         //show microcode miss count
                     end
-                    4'b1111: begin
-                        
-                    end//chip soft reset
                 endcase
                 command_op_ack <= 1'b1;
                 end
