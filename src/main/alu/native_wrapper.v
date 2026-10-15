@@ -9,8 +9,10 @@ module native_alu_wrapper (
     inout VSS,   
     
     //adder!
-    inout adder_mux,
-    input wire adder_idle,
+    input wire [1:0] adder_mux,
+    input wire [1:0] multi_mux,
+
+
 
     inout [3:0] trit4_in_a_0,
     inout [3:0] trit4_in_b_0,
@@ -48,14 +50,13 @@ it should be noted that the ternary adder and multiplier have different muxes an
     wire [3:0] adder_result;
     wire       carry_in;
     wire       carry_out;
-    wire       adder_mux_line;
 
 native_3i_9t_mux     ternary_adder_mux(
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
-    .mux_line(adder_mux_line),
-    .deactivate(adder_idle),
+    .mux_line0 (adder_mux[0]), //flex that 3 level logic while you still can
+    .mux_line1 (adder_mux[1]),
     // Ternary Inputs (4 trits each)
     .trit_in_a_0(trit4_in_a_0),
     .trit_in_a_1(trit4_in_a_1),
@@ -78,9 +79,8 @@ native_3o_5t_mux ternary_adder_demux (
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
-    .mux_line(adder_mux_line),
-    .deactivate(adder_idle), //cut using Tgate and pull to 0.9v
-
+    .mux_line0 (adder_mux[0]), //flex that 3 level logic while you still can
+    .mux_line1 (adder_mux[1]),
     .trit_in(adder_result),
     .trit_in_cout(carry_out),
     // Ternary outputs (4 trits each)
