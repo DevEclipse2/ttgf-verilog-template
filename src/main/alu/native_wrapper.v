@@ -76,9 +76,9 @@ native_3i_9t_mux ternary_adder_mux(
     .trit_in_b_1(trit4_in_b_1),
     .trit_in_b_2(trit4_in_b_2),
 
-    .trit_in_cin_0(trit_in_cin_0),
-    .trit_in_cin_1(trit_in_cin_1),
-    .trit_in_cin_2(trit_in_cin_2),
+    .trit_in_cin_0(trit4_in_cin_0),
+    .trit_in_cin_1(trit4_in_cin_1),
+    .trit_in_cin_2(trit4_in_cin_2),
 
     .trit_out_a(adder_operand_a),
     .trit_out_b(adder_operand_b),
