@@ -189,4 +189,53 @@ always @(posedge clk or negedge rst_n) begin
     end
 end
 
+
+native_alu_wrapper native_alu(
+
+    inout VDD_3V3,
+    inout VDD_1V65,
+    inout VSS,   
+    
+    input wire [1:0] adder_mux,
+    input wire [1:0] multi_mux,
+    input wire [1:0] tritwise_1_mux,
+    input wire [1:0] tritwise_2_mux,
+    input wire [1:0] tritwise_3_mux,
+    input wire [1:0] tritwise_4_mux,
+
+
+    inout [3:0] trit4_in_a_0,
+    inout [3:0] trit4_in_b_0,
+    inout [2:0] tritwise_control_0,
+    inout [7:0] multiplier_out_0,
+    
+    inout       trit4_in_cin_0,
+    inout       trit1_in_b_0,
+
+    inout [3:0] trit4_out_0,
+    inout       trit4_out_cout_0,
+
+    inout [2:0] tritwise_control_1,
+    inout [3:0] trit4_in_a_1,
+    inout [3:0] trit4_in_b_1,
+    inout       trit4_in_cin_1,
+    inout       trit1_in_b_1,
+
+    inout [3:0] trit4_out_1,
+    inout       trit4_out_cout_1,
+    inout [7:0] multiplier_out_1,
+
+
+    inout [2:0] tritwise_control_2,
+    inout [3:0] trit4_in_a_2,
+    inout [3:0] trit4_in_b_2,
+    inout       trit4_in_cin_2,
+    inout       trit1_in_b_2,
+
+    inout [3:0] trit4_out_2,
+    inout       trit4_out_cout_2,
+
+    inout [7:0] multiplier_out_2,
+);
+
 endmodule

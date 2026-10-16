@@ -5,8 +5,8 @@ module native_3o_5t_demux (
     inout VDD_1V65,
     inout VSS,
     
-    inout mux_line, //flex that 3 level logic while you still can
-    inout deactivate,
+    inout mux_line0, //flex that 3 level logic while you still can
+    inout mux_line1,
 
     inout [3:0] trit_in,
     inout trit_in_cout,
