@@ -48,7 +48,6 @@ module native_alu_wrapper (
     inout       trit4_out_cout_2,
 
     inout [7:0] multiplier_out_2,
-
 );
 
 //remember to cut stuff with transmission gates if theres no data coming through, 

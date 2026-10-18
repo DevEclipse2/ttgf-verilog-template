@@ -42,18 +42,4 @@ module tt_um_core_main (
 //converts into ternary with a couple of black boxes
 //this verilog file handles data forwarding as well as tracking internal state for the machine
 
-//24 bit program counter
-//this is in TERNARY
-reg [23:0]  program_counter = 0;
-//this is also in ternary for the micro operations
-reg [5:0]   micro_program_counter = 0;
-//3 threads
-//3 macro instruction buffer
-//shared microcode 
-//1 cycle prefetch 
-//
-
-
-
-
 endmodule

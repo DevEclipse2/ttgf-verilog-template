@@ -1,5 +1,5 @@
 (* blackbox *)
-module native_tritwise_4 (
+module native_tritwise_3 (
     // Power & Mid-Rail
     inout VDD_3V3,
     inout VDD_1V65,
