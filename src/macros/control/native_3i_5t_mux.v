@@ -11,7 +11,7 @@ module native_3i_5t_mux (
     // Ternary Inputs (4 trits each)
     inout trit_in_a_0,
     inout trit_in_b_0,
-    inout [2:0] control_pass_in_0, //make sure this is binary pass
+    inout [2:0] control_pass_in_0, //make sure this can also pass binary and ternary
 
     inout trit_in_a_1,
     inout trit_in_b_1,

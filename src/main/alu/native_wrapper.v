@@ -1,7 +1,11 @@
 //this is the wrapper that handles signal routing between the 3 threads and funnels them into the base modules
 
-//for example
+/*
+0 : adder
+1 : multiply
+2 : trit shift
 
+*/
 module native_alu_wrapper (
 
     inout VDD_3V3,
@@ -10,6 +14,7 @@ module native_alu_wrapper (
     
     input wire [1:0] adder_mux,
     input wire [1:0] multi_mux,
+    input wire [1:0] shift_mux,
     input wire [1:0] tritwise_1_mux,
     input wire [1:0] tritwise_2_mux,
     input wire [1:0] tritwise_3_mux,
@@ -132,7 +137,7 @@ native_3i_8t_mux ternary_multiplier_mux(
     .trit_out_a(adder_operand_a),
     .trit_out_b(adder_operand_b),
 );
-native_full_adder_4t ternary_multiplier(
+native_multiplier ternary_multiplier(
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
@@ -388,6 +393,75 @@ native_3o_1t_demux ternary_tritwise_4_demux(
     .trit_out_1(trit4_out_cout_1),
     .trit_out_2(trit4_out_cout_2),
     .trit_in(tritwise4_result)
+);
+
+wire [3:0] shift_data;
+wire [3:0] shift_res;
+wire select_result;
+wire [2:0] shift_amt;
+wire [11:0] shift_result;
+native_3i_8t_shift_mux ternary_tritshift_mux(
+    // Power & Mid-Rail
+    .VDD_3V3(VDD_3V3),
+    .VDD_1V65(VDD_1V65),
+    .VSS(VSS),
+
+    .mux_line0 (shift_mux[0]), //flex that 3 level logic while you still can
+    .mux_line1 (shift_mux[1]),
+
+    .in_res_sel_0(trit4_in_cin_0),
+    .in_data_0(trit4_in_a_0), 
+    .in_shift_amt_0(tritwise_control_0), //shift amount
+
+    .in_res_sel_1(trit4_in_cin_1),
+    .in_data_1(trit4_in_a_1), 
+    .in_shift_amt_1(tritwise_control_1), //shift amount
+
+    .in_res_sel_2(trit4_in_cin_2),
+    .in_data_2(trit4_in_a_2), 
+    .in_shift_amt_2(tritwise_control_2), //shift amount
+
+    .out_res_sel(select_result),
+    .out_data(shift_data), 
+    .out_shift_amt(select_amt),
+);
+
+native_full_adder_4t ternary_tritshift (
+    // Power & Mid-Rail
+    .VDD_3V3(VDD_3V3),
+    .VDD_1V65(VDD_1V65),
+    .VSS(VSS),
+    
+    // Ternary Inputs (4 trits each)
+    trit_in_a(shift_data),
+    trit_shift_amount(select_amt[1:0]),
+    direction(select_amt[2]), //left,right
+    // Ternary Output
+    trit_out(shift_result)
+);
+
+native_shift_selector ternary_shiftselector (
+
+    .VDD_3V3(VDD_3V3),
+    .VDD_1V65(VDD_1V65),
+    .VSS(VSS),
+    
+    selector(select_result), // -1 is left, 0 is center , 1 is right 
+
+    .trit_in(shift_result),
+    .trit_out(shift_res)
+);
+
+native_3o_4t_demux ternart_shift_demux (
+    .VDD_3V3(VDD_3V3),
+    .VDD_1V65(VDD_1V65),
+    .VSS(VSS),
+
+    .trit_in(shift_res),
+    // Ternary outputs (4 trits each)
+    .trit_out_0(trit4_out_0),
+    .trit_out_1(trit4_out_1),
+    .trit_out_2(trit4_out_2)
 );
 
 endmodule

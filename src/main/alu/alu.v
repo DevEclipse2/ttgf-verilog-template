@@ -8,16 +8,13 @@ module alu(
     inout VDD_1V65,
     inout VSS,
 
-
-
     input   wire clk,
     input   wire rst_n,
     //command lines
     input   wire [2:0] cmd_t0,
     input   wire [2:0] tritwise_command_t0,
-    //
-    input   wire [1:0] tshift_t0,
-    input   wire [2:0] tritwise_t0,
+
+    input   wire [2:0] tritshift_tritwise_t0, //trit shifts up to 3 front and back
 
     input   wire cmd_ready_t0,
     output  reg  res_ready_t0,
@@ -35,8 +32,7 @@ module alu(
     //command lines
     input   wire [2:0] cmd_t1,
     //
-    input   wire [1:0] tshift_t1,
-    input   wire [2:0] tritwise_t1,
+    input   wire [2:0] tritshift_tritwise_t1, //trit shifts up to 3 front and back
 
     input   wire cmd_ready_t1,
     output  reg  res_ready_t1,
@@ -54,8 +50,7 @@ module alu(
 
     input   wire [2:0] cmd_t2,
     //
-    input   wire [1:0] tshift_t2,
-    input   wire [2:0] tritwise_t2,
+    input   wire [2:0] tritshift_tritwise_t2, //trit shifts up to 3 front and back
 
     input   wire cmd_ready_t2,
     output  reg  res_ready_t2,
@@ -72,12 +67,14 @@ module alu(
 );
 
 native_alu_wrapper native_alu(
+
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
     
     .adder_mux(adder_mux),
     .multi_mux(multi_mux),
+    .shift_mux(shift_mux),
     .tritwise_1_mux(tritwise_1_mux),
     .tritwise_2_mux(tritwise_2_mux),
     .tritwise_3_mux(tritwise_3_mux),
@@ -182,6 +179,9 @@ wire [1:0] tritwise_3_mux = (grant_t0 || (locked_t0 == 3'd5)) ? 2'd0 :
 wire [1:0] tritwise_4_mux = (grant_t0 || (locked_t0 == 3'd6)) ? 2'd0 :
                             (grant_t1 || (locked_t1 == 3'd6)) ? 2'd1 :
                             (grant_t2 || (locked_t2 == 3'd6)) ? 2'd2 : 2'b11;
+wire [1:0] shift_mux      = (grant_t0 || (locked_t0 == 3'd7)) ? 2'd0 :
+                            (grant_t1 || (locked_t1 == 3'd7)) ? 2'd1 :
+                            (grant_t2 || (locked_t2 == 3'd7)) ? 2'd2 : 2'b11;
 // wire [1:0] tritwise_1_mux = (grant_t0 || (locked_t0 == 3'd7)) ? 2'd0 :
 //                             (grant_t1 || (locked_t1 == 3'd7)) ? 2'd1 :
 //                             (grant_t2 || (locked_t2 == 3'd7)) ? 2'd2 : 2'b11;
