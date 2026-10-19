@@ -457,6 +457,9 @@ native_3o_4t_demux ternart_shift_demux (
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
 
+    .mux_line0 (shift_mux[0]), //flex that 3 level logic while you still can
+    .mux_line1 (shift_mux[1]),
+
     .trit_in(shift_res),
     // Ternary outputs (4 trits each)
     .trit_out_0(trit4_out_0),
