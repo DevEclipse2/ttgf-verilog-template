@@ -6,7 +6,7 @@
 2 : trit shift
 
 */
-module native_alu_wrapper (
+module native_wrapper (
 
     inout VDD_3V3,
     inout VDD_1V65,
@@ -52,7 +52,7 @@ module native_alu_wrapper (
     inout [3:0] trit4_out_2,
     inout       trit4_out_cout_2,
 
-    inout [7:0] multiplier_out_2,
+    inout [7:0] multiplier_out_2
 );
 
 //remember to cut stuff with transmission gates if theres no data coming through, 
@@ -135,7 +135,7 @@ native_3i_8t_mux ternary_multiplier_mux(
     .trit_in_b_2(trit4_in_b_2),
 
     .trit_out_a(adder_operand_a),
-    .trit_out_b(adder_operand_b),
+    .trit_out_b(adder_operand_b)
 );
 native_multiplier ternary_multiplier(
     .VDD_3V3(VDD_3V3),
@@ -156,11 +156,11 @@ native_3o_8t_demux ternary_multiplier_demux(
     .mux_line0 (multi_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (multi_mux[1]),
 
-    trit_in(multiplier_result),
+    .trit_in(multiplier_result),
     //Ternary outputs (4 trits each)
-    trit_out_0(multiplier_out_0),
-    trit_out_1(multiplier_out_1),
-    trit_out_2(multiplier_out_2 ),
+    .trit_out_0(multiplier_out_0),
+    .trit_out_1(multiplier_out_1),
+    .trit_out_2(multiplier_out_2 )
 );
 
 wire        tritwise1_operand_a;
@@ -423,7 +423,7 @@ native_3i_8t_shift_mux ternary_tritshift_mux(
 
     .out_res_sel(select_result),
     .out_data(shift_data), 
-    .out_shift_amt(select_amt),
+    .out_shift_amt(select_amt)
 );
 
 native_full_adder_4t ternary_tritshift (
@@ -433,11 +433,11 @@ native_full_adder_4t ternary_tritshift (
     .VSS(VSS),
     
     // Ternary Inputs (4 trits each)
-    trit_in_a(shift_data),
-    trit_shift_amount(select_amt[1:0]),
-    direction(select_amt[2]), //left,right
+    .trit_in_a(shift_data),
+    .trit_shift_amount(select_amt[1:0]),
+    .direction(select_amt[2]), //left,right
     // Ternary Output
-    trit_out(shift_result)
+    .trit_out(shift_result)
 );
 
 native_shift_selector ternary_shiftselector (
@@ -446,7 +446,7 @@ native_shift_selector ternary_shiftselector (
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
     
-    selector(select_result), // -1 is left, 0 is center , 1 is right 
+    .selector(select_result), // -1 is left, 0 is center , 1 is right 
 
     .trit_in(shift_result),
     .trit_out(shift_res)

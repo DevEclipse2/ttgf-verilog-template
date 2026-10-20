@@ -2,7 +2,7 @@ module secondary_register (
 
     input clk,
     input rst_n,
-    output [23:0] trit_out,
+    output reg [23:0] trit_out,
     input  [23:0] trit_in,
     input r_enable,
     input w_enable,
@@ -12,8 +12,6 @@ module secondary_register (
     input sel_cmd1,
 
     //2 spots, one from the alu and the thread manager to read and write, and another for the commandpipe feed
-    input [23:0] binary_trit_in,
-    input [3:0] commandpipe_address, 
     // 6 per command, 
     //dock at 0 to signify its done, dock at any other invalid address to signify problem
 
@@ -57,7 +55,7 @@ module secondary_register (
     // PC Read Enable: High only when r_enable is high AND the target address is 9
     wire pc_r_enable = r_enable && (t_addr_in == 4'd5);
 
-    ternary_pc_12T program_counter (
+    ternary_pc_12t program_counter (
     .clk(clk),
     .rst_n(rst_n),
     .inc_enable(pc_inc_enable),
@@ -75,7 +73,7 @@ module secondary_register (
         if (r_enable) begin
             case (t_addr_in)
                 // Command Registers
-                4'd9: trit_out = sel_cmd1 ? cmd1_reg_0 : cmd0_reg_0;
+                4'd9:  trit_out = sel_cmd1 ? cmd1_reg_0 : cmd0_reg_0;
                 4'd10: trit_out = sel_cmd1 ? cmd1_reg_1 : cmd0_reg_1;
                 4'd11: trit_out = sel_cmd1 ? cmd1_reg_2 : cmd0_reg_2;
                 4'd12: trit_out = sel_cmd1 ? cmd1_reg_3 : cmd0_reg_3;

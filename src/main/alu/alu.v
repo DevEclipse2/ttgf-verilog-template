@@ -19,13 +19,13 @@ module alu(
     input   wire cmd_ready_t0,
     output  reg  res_ready_t0,
     //4 trit
-    inout [3:0] 4t_a_i_t0,
-    inout [3:0] 4t_b_i_t0,
-    inout [3:0]   4t_o_t0,
+    inout [3:0] t4_a_i_t0,
+    inout [3:0] t4_b_i_t0,
+    inout [3:0]   t4_o_t0,
     //1 trit
-    inout       1t_a_i_t0,
-    inout       1t_b_i_t0,
-    inout         1t_o_t0,
+    inout       t1_a_i_t0,
+    inout       t1_b_i_t0,
+    inout         t1_o_t0,
 
     inout [7:0] multiply_o_t0,
 
@@ -37,13 +37,13 @@ module alu(
     input   wire cmd_ready_t1,
     output  reg  res_ready_t1,
     //4 trit
-    inout [3:0] 4t_a_i_t1,
-    inout [3:0] 4t_b_i_t1,
-    inout [3:0]   4t_o_t1,
+    inout [3:0] t4_a_i_t1,
+    inout [3:0] t4_b_i_t1,
+    inout [3:0]   t4_o_t1,
     //1 trit
-    inout       1t_a_i_t1,
-    inout       1t_b_i_t1,
-    inout         1t_o_t1,
+    inout       t1_a_i_t1,
+    inout       t1_b_i_t1,
+    inout         t1_o_t1,
     
     inout [7:0] multiply_o_t1,
 
@@ -55,18 +55,18 @@ module alu(
     input   wire cmd_ready_t2,
     output  reg  res_ready_t2,
     //4 trit
-    inout [3:0] 4t_a_i_t2,
-    inout [3:0] 4t_b_i_t2,
-    inout [3:0]   4t_o_t2,
+    inout [3:0] t4_a_i_t2,
+    inout [3:0] t4_b_i_t2,
+    inout [3:0]   t4_o_t2,
     //1 trit
-    inout       1t_a_i_t2,
-    inout       1t_b_i_t2,
-    inout         1t_o_t2,
+    inout       t1_a_i_t2,
+    inout       t1_b_i_t2,
+    inout         t1_o_t2,
     inout [7:0] multiply_o_t2,
 
 );
 
-native_alu_wrapper native_alu(
+native_wrapper native_alu(
 
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
@@ -80,40 +80,40 @@ native_alu_wrapper native_alu(
     .tritwise_3_mux(tritwise_3_mux),
     .tritwise_4_mux(tritwise_4_mux),
 
-    .trit4_in_a_0(4t_a_i_t0),
-    .trit4_in_b_0(4t_b_i_t0),
+    .trit4_in_a_0(t4_a_i_t0),
+    .trit4_in_b_0(t4_b_i_t0),
     .tritwise_control_0(tritwise_command_t0),
     .multiplier_out_0(multiply_o_t0),
     
-    .trit4_in_cin_0(1t_a_i_t0),
-    .trit1_in_b_0(1t_b_i_t0),
+    .trit4_in_cin_0(t1_a_i_t0),
+    .trit1_in_b_0(t1_b_i_t0),
 
-    .trit4_out_0(4t_o_t0),
-    .trit4_out_cout_0(1t_o_t0),
+    .trit4_out_0(t4_o_t0),
+    .trit4_out_cout_0(t1_o_t0),
 
     //thread 1
-    .trit4_in_a_1(4t_a_i_t1),
-    .trit4_in_b_1(4t_b_i_t1),
+    .trit4_in_a_1(t4_a_i_t1),
+    .trit4_in_b_1(t4_b_i_t1),
     .tritwise_control_1(tritwise_command_t1),
     .multiplier_out_1(multiply_o_t1),
     
-    .trit4_in_cin_1(1t_a_i_t1),
-    .trit1_in_b_1(1t_b_i_t1),
+    .trit4_in_cin_1(t1_a_i_t1),
+    .trit1_in_b_1(t1_b_i_t1),
 
-    .trit4_out_1(4t_o_t1),
-    .trit4_out_cout_1(1t_o_t1),
+    .trit4_out_1(t4_o_t1),
+    .trit4_out_cout_1(t1_o_t1),
 
     //thread 2
-    .trit4_in_a_2(4t_a_i_t2),
-    .trit4_in_b_2(4t_b_i_t2),
+    .trit4_in_a_2(t4_a_i_t2),
+    .trit4_in_b_2(t4_b_i_t2),
     .tritwise_control_2(tritwise_command_t2),
     .multiplier_out_2(multiply_o_t2),
     
-    .trit4_in_cin_2(1t_a_i_t2),
-    .trit1_in_b_2(1t_b_i_t2),
+    .trit4_in_cin_2(t1_a_i_t2),
+    .trit1_in_b_2(t1_b_i_t2),
 
-    .trit4_out_2(4t_o_t2),
-    .trit4_out_cout_2(1t_o_t2),
+    .trit4_out_2(t4_o_t2),
+    .trit4_out_cout_2(t1_o_t2)
 );
 
 reg [2:0] locked_t0, locked_t1, locked_t2;

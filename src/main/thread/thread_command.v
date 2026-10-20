@@ -9,9 +9,9 @@ module thread_command(
         input wire [3:0] param_0,
         input wire [3:0] param_1,
         input wire [3:0] param_2,
-        output reg command_req_new,
+        output reg  command_req_new,
         input  wire command_data_sent,
-        output wire []
+        // output wire ,
 
     //alu interface
         output  wire [2:0] alu_command,
@@ -20,14 +20,14 @@ module thread_command(
         output  wire cmd_ready,
         input   wire res_ready_in,
         //4 trit
-        inout [3:0] 4t_a_out,
-        inout [3:0] 4t_b_out,
-        inout       1t_a_out,
-        inout       1t_b_out,
+        inout [3:0] t4_a_out,
+        inout [3:0] t4_b_out,
+        inout       t1_a_out,
+        inout       t1_b_out,
 
         //results here
-        inout [3:0] 4t_in,
-        inout       1t_in,
+        inout [3:0] t4_in,
+        inout       t1_in,
         inout [7:0] multiply_in,
 
     //overlord interface
@@ -45,13 +45,24 @@ reg using_macroop_1;
 ternary_pc_4trit parameter_microcode_counter(
     .clk(clk),
     .rst_n(rst_n),       // Active-low synchronous/asynchronous reset
-    inc_enable(),  // High to increment PC by +1 on clock edge
-    input  wire       w_enable,    // High to overwrite PC with w_data (Jump/Branch)
-    input  wire       r_enable,    // High to drive PC onto r_data bus
-    input  wire [7:0] w_data,      // 4-trit (8-bit) branch target input
-    output wire [7:0] r_data,      // 4-trit (8-bit) gated read output
-    output wire       overflow     // Pulses high when wrapping from all +1s to all -1s
+    .inc_enable(),  // High to increment PC by +1 on clock edge
+    .w_enable(),    // High to overwrite PC with w_data (Jump/Branch)
+    .r_enable(),    // High to drive PC onto r_data bus
+    .w_data(),      // 4-trit (8-bit) branch target input
+    .r_data(),      // 4-trit (8-bit) gated read output
+    .overflow()     // Pulses high when wrapping from all +1s to all -1s
 );
+
+//command pipe fills up to 
+//up to 
+
+
+reg [191:0] command_param_pipe;
+reg [63:0]  command_pipe;
+
+
+
+
 
 localparam  threadidle         = 2'b00, //not doing any work? well i can fix that...
             threadwaitdata     = 2'b01, //
@@ -61,9 +72,10 @@ reg [1:0]   threadstate = threadidle;
 always @(posedge clk or negedge rst_n) begin
     //this is the main loop of the system
     if(rst_n) begin
+        command_param_pipe  <= 192'd0;
+        command_pipe        <= 64'd0;
     end else begin
-
-
+        //start of the clock
 
     end
 end
