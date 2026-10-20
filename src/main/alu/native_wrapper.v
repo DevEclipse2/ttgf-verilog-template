@@ -60,6 +60,8 @@ module native_wrapper (
 
 wire [3:0] adder_operand_a;
 wire [3:0] adder_operand_b;
+wire [3:0] mult_operand_a;
+wire [3:0] mult_operand_b;
 wire [3:0] adder_result;
 wire [7:0] multiplier_result;
 wire       carry_in;
@@ -101,17 +103,17 @@ native_3o_5t_mux ternary_adder_demux(
     .trit_out_0(trit4_out_0),
     .trit_out_1(trit4_out_1),
     .trit_out_2(trit4_out_2),
-    .trit_out_cout_0(trit4_out_cout0),
-    .trit_out_cout_1(trit4_out_cout1),
-    .trit_out_cout_2(trit4_out_cout2)
+    .trit_out_cout_0(trit4_out_cout_0),
+    .trit_out_cout_1(trit4_out_cout_1),
+    .trit_out_cout_2(trit4_out_cout_2)
 );
 native_full_adder_4t ternary_adder(
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
     
-    .trit_in_a(operand_a),
-    .trit_in_b(operand_b),
+    .trit_in_a(adder_operand_a),
+    .trit_in_b(adder_operand_b),
     
     .trit_carry_in(carry_in),
     .trit_carry_out(carry_out),
@@ -134,16 +136,16 @@ native_3i_8t_mux ternary_multiplier_mux(
     .trit_in_b_1(trit4_in_b_1),
     .trit_in_b_2(trit4_in_b_2),
 
-    .trit_out_a(adder_operand_a),
-    .trit_out_b(adder_operand_b)
+    .trit_out_a(mult_operand_a),
+    .trit_out_b(mult_operand_b)
 );
 native_multiplier ternary_multiplier(
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),
     
-    .trit_in_a(operand_a),
-    .trit_in_b(operand_b),
+    .trit_in_a(mult_operand_a),
+    .trit_in_b(mult_operand_b),
     
     .trit_out(multiplier_result)
 );
@@ -201,8 +203,8 @@ native_tritwise_1 ternary_tritwise_1(
     .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
-    .trit_in_a(tritwise_operand_a),
-    .trit_in_b(tritwise_operand_b),
+    .trit_in_a(tritwise1_operand_a),
+    .trit_in_b(tritwise1_operand_b),
     .control_sig(tritwise1_controller),
     // Ternary Output
     .trit_out(tritwise1_result)
@@ -260,8 +262,8 @@ native_tritwise_2 ternary_tritwise_2(
     .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
-    .trit_in_a(tritwise_operand_a),
-    .trit_in_b(tritwise_operand_b),
+    .trit_in_a(tritwise2_operand_a),
+    .trit_in_b(tritwise2_operand_b),
     .control_sig(tritwise2_controller),
     // Ternary Output
     .trit_out(tritwise2_result)
@@ -318,8 +320,8 @@ native_tritwise_3 ternary_tritwise_3(
     .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
-    .trit_in_a(tritwise_operand_a),
-    .trit_in_b(tritwise_operand_b),
+    .trit_in_a(tritwise3_operand_a),
+    .trit_in_b(tritwise3_operand_b),
     .control_sig(tritwise3_controller),
     // Ternary Output
     .trit_out(tritwise3_result)
@@ -375,8 +377,8 @@ native_tritwise_4 ternary_tritwise_4 (
     .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
-    .trit_in_a(tritwise_operand_a),
-    .trit_in_b(tritwise_operand_b),
+    .trit_in_a(tritwise4_operand_a),
+    .trit_in_b(tritwise4_operand_b),
     .control_sig(tritwise4_controller),
     // Ternary Output
     .trit_out(tritwise4_result)
@@ -398,7 +400,7 @@ native_3o_1t_demux ternary_tritwise_4_demux(
 wire [3:0] shift_data;
 wire [3:0] shift_res;
 wire select_result;
-wire [2:0] shift_amt;
+wire [2:0] select_amt;
 wire [11:0] shift_result;
 native_3i_8t_shift_mux ternary_tritshift_mux(
     // Power & Mid-Rail
@@ -452,7 +454,7 @@ native_shift_selector ternary_shiftselector (
     .trit_out(shift_res)
 );
 
-native_3o_4t_demux ternart_shift_demux (
+native_3o_4t_demux ternary_shift_demux (
     .VDD_3V3(VDD_3V3),
     .VDD_1V65(VDD_1V65),
     .VSS(VSS),

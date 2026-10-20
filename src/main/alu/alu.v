@@ -62,7 +62,7 @@ module alu(
     inout       t1_a_i_t2,
     inout       t1_b_i_t2,
     inout         t1_o_t2,
-    inout [7:0] multiply_o_t2,
+    inout [7:0] multiply_o_t2
 
 );
 
