@@ -3,12 +3,12 @@ project:
   title:        "triple_t"      # Project title
   author:       "AzzyAzimuth"      # Your name
   discord:      "mr_eclipse"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  ""      # One line description of what your project does
+  description:  "experimental ternary cpu"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
 
   # How many tiles your design occupies? A single tile is about 340x160 uM.
-  tiles: "4x4"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 3x4 or 4x4
+  tiles: "3x2"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 3x4 or 4x4
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
   top_module:  "tt_um_triple_t_devEclipse2"
@@ -18,7 +18,7 @@ project:
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
     - "project.v"
-
+  analog_pins: 1
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
 pinout:
@@ -54,7 +54,7 @@ pinout:
 
   #might not get em but fuh it 
   
-  analog[0]: "" #1.65v 
+  ua[0]: "the singular power line. please take good care of it. thanks." #1.65v 
 
 # Do not change!
 yaml_version: 6

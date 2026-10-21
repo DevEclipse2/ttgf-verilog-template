@@ -15,5 +15,9 @@
 
 # --- Source Files (Top-levels or individual files) ---
 ./src/main/tt_um_triple_t.v
+./src/main/logic_test.v
+./src/main/ternary_to_unsigned_binary_logic_convert_4t.v
 ./src/utils/coresetup.v
-./src/utils/logic_container.v
+./src/main/logic_container.v
+./src/main/tt_um_core_wrapper.v
+./src/main/tt_um_core_commander.v

@@ -6,11 +6,11 @@
 2 : trit shift
 
 */
+
+(* keep_hierarchy = "true" *)
 module native_wrapper (
 
-    inout VDD_3V3,
     inout VDD_1V65,
-    inout VSS,   
     
     input wire [1:0] adder_mux,
     input wire [1:0] multi_mux,
@@ -68,9 +68,9 @@ wire       carry_in;
 wire       carry_out;
 
 native_3i_9t_mux ternary_adder_mux(
-    .VDD_3V3(VDD_3V3),
+
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
+
     .mux_line0 (adder_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (adder_mux[1]),
     // Ternary Inputs (4 trits each)
@@ -92,9 +92,9 @@ native_3i_9t_mux ternary_adder_mux(
 );
 native_3o_5t_mux ternary_adder_demux(
 
-    .VDD_3V3(VDD_3V3),
+     
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
+
     .mux_line0 (adder_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (adder_mux[1]),
     .trit_in(adder_result),
@@ -108,9 +108,9 @@ native_3o_5t_mux ternary_adder_demux(
     .trit_out_cout_2(trit4_out_cout_2)
 );
 native_full_adder_4t ternary_adder(
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     .trit_in_a(adder_operand_a),
     .trit_in_b(adder_operand_b),
@@ -122,9 +122,9 @@ native_full_adder_4t ternary_adder(
 );
 
 native_3i_8t_mux ternary_multiplier_mux(
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (multi_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (multi_mux[1]),
     // Ternary Inputs (4 trits each)
@@ -140,9 +140,9 @@ native_3i_8t_mux ternary_multiplier_mux(
     .trit_out_b(mult_operand_b)
 );
 native_multiplier ternary_multiplier(
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     .trit_in_a(mult_operand_a),
     .trit_in_b(mult_operand_b),
@@ -151,9 +151,9 @@ native_multiplier ternary_multiplier(
 );
 native_3o_8t_demux ternary_multiplier_demux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
 
     .mux_line0 (multi_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (multi_mux[1]),
@@ -172,9 +172,9 @@ wire [2:0]  tritwise1_controller;
 
 native_3i_5t_mux ternary_tritwise_1_mux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_1_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_1_mux[1]),
 
@@ -198,9 +198,9 @@ native_3i_5t_mux ternary_tritwise_1_mux(
 
 native_tritwise_1 ternary_tritwise_1(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
     .trit_in_a(tritwise1_operand_a),
@@ -212,9 +212,9 @@ native_tritwise_1 ternary_tritwise_1(
 
 native_3o_1t_demux ternary_tritwise_1_demux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_1_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_1_mux[1]),
 
@@ -231,9 +231,9 @@ wire [2:0]  tritwise2_controller;
 
 native_3i_5t_mux ternary_tritwise_2_mux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_2_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_2_mux[1]),
 
@@ -257,9 +257,9 @@ native_3i_5t_mux ternary_tritwise_2_mux(
 
 native_tritwise_2 ternary_tritwise_2(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
     .trit_in_a(tritwise2_operand_a),
@@ -271,9 +271,9 @@ native_tritwise_2 ternary_tritwise_2(
 
 native_3o_1t_demux ternary_tritwise_2_demux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_2_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_2_mux[1]),
 
@@ -290,9 +290,9 @@ wire [2:0]  tritwise3_controller;
 
 native_3i_5t_mux ternary_tritwise_3_mux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_3_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_3_mux[1]),
 
@@ -315,9 +315,9 @@ native_3i_5t_mux ternary_tritwise_3_mux(
 );
 native_tritwise_3 ternary_tritwise_3(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
     .trit_in_a(tritwise3_operand_a),
@@ -328,9 +328,9 @@ native_tritwise_3 ternary_tritwise_3(
 );
 native_3o_1t_demux ternary_tritwise_3_demux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_3_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_3_mux[1]),
 
@@ -347,9 +347,9 @@ wire [2:0]  tritwise4_controller;
 
 native_3i_5t_mux ternary_tritwise_4_mux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_4_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_4_mux[1]),
 
@@ -372,9 +372,9 @@ native_3i_5t_mux ternary_tritwise_4_mux(
 );
 native_tritwise_4 ternary_tritwise_4 (
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     // Ternary Inputs (1 trit each)
     .trit_in_a(tritwise4_operand_a),
@@ -385,9 +385,9 @@ native_tritwise_4 ternary_tritwise_4 (
 );
 native_3o_1t_demux ternary_tritwise_4_demux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     .mux_line0 (tritwise_4_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (tritwise_4_mux[1]),
 
@@ -404,9 +404,9 @@ wire [2:0] select_amt;
 wire [11:0] shift_result;
 native_3i_8t_shift_mux ternary_tritshift_mux(
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
 
     .mux_line0 (shift_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (shift_mux[1]),
@@ -430,9 +430,9 @@ native_3i_8t_shift_mux ternary_tritshift_mux(
 
 native_full_adder_4t ternary_tritshift (
     // Power & Mid-Rail
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     // Ternary Inputs (4 trits each)
     .trit_in_a(shift_data),
@@ -444,9 +444,9 @@ native_full_adder_4t ternary_tritshift (
 
 native_shift_selector ternary_shiftselector (
 
-    .VDD_3V3(VDD_3V3),
+     
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     .selector(select_result), // -1 is left, 0 is center , 1 is right 
 
@@ -455,9 +455,8 @@ native_shift_selector ternary_shiftselector (
 );
 
 native_3o_4t_demux ternary_shift_demux (
-    .VDD_3V3(VDD_3V3),
+     
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
 
     .mux_line0 (shift_mux[0]), //flex that 3 level logic while you still can
     .mux_line1 (shift_mux[1]),

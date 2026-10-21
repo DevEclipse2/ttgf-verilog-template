@@ -3,10 +3,7 @@ module alu(
     the alu has a floating priority system and decides to operate upon the data
     it has been slimmed down to stateless
     */
-    
-    inout VDD_3V3,
     inout VDD_1V65,
-    inout VSS,
 
     input   wire clk,
     input   wire rst_n,
@@ -71,10 +68,8 @@ module alu(
 );
 
 native_wrapper native_alu(
-
-    .VDD_3V3(VDD_3V3),
+    
     .VDD_1V65(VDD_1V65),
-    .VSS(VSS),
     
     .adder_mux(adder_mux),
     .multi_mux(multi_mux),

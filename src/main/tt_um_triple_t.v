@@ -1,88 +1,112 @@
 module tt_um_triple_t_devEclipse2 (
+    `ifdef USE_POWER_PINS
+    inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD
+    inout VSS,
+    `endif
+
     input  wire [7:0] ui_in,    // Dedicated inputs (Pins 0-7)
     output wire [7:0] uo_out,   // Dedicated outputs (Pins 16-23)
     input  wire [7:0] uio_in,   // IOs: Input path (Pins 8-15)
     output wire [7:0] uio_out,  // IOs: Output path (Pins 8-15)
     output wire [7:0] uio_oe,   // IOs: Enable path (active high: 1=drive, 0=high-Z)
+    inout  wire [7:0] ua,
     input  wire       ena,      // Always 1 when powered
     input  wire       clk,      // Clock 
     input  wire       rst_n     // Reset (Active low)
 );
-    //the first 3 bits are separated and the rest are shared
-    wire [2:0] addresser   = ui_in[2:0];
-    wire [4:0] shared_ctrl = ui_in[7:3];
-    wire [7:0] shared_data = uio_in;
 
-    //internal wires to catch the outputs from each sub-module
-    wire [7:0] mod0_uo_out, mod0_uio_out, mod0_uio_oe;
-    wire [7:0] mod1_uo_out, mod1_uio_out, mod1_uio_oe;
-    wire [7:0] mod2_uo_out, mod2_uio_out, mod2_uio_oe;
+    wire [2:0] mux_sel     = ui_in[7:5];
+    wire [7:0] forwarded_ui = ui_in[7:0]; //fully forwarded
 
-    // 3. Instantiate the sub-modules
-    // The data is broadcast to all of them, but only the one matching the 
-    // current addresser gets its `module_enable` flag pulled HIGH.
-    dummy_worker sub_module_0 (
-        .clk(clk), .rst_n(rst_n),
-        .module_enable (addresser == 3'd0), 
-        .ctrl_payload  (shared_ctrl), 
-        .data_payload  (shared_data),
-        .out_dedicated (mod0_uo_out), 
-        .out_bus_write (mod0_uio_out), 
-        .out_bus_oe    (mod0_uio_oe)
+    // Output busses from the 4 distinct sub-modules
+    wire [7:0] uo_000,  uo_001,  uo_111,  uo_def;
+    wire [7:0] uio_out_000, uio_out_001, uio_out_111, uio_out_def;
+    wire [7:0] uio_oe_000,  uio_oe_001,  uio_oe_111,  uio_oe_def;
+
+    logic_container main_module(
+
+        VDD_1V65(ua[0]),
+        .ui_in(ui_in),    // Dedicated inputs (Pins 0-7)
+        .uo_out(uo_def),   // Dedicated outputs (Pins 16-23)
+        .uio_in(uio_in),   // IOs: Input path (Pins 8-15)
+        .uio_out(uio_out_def),  // IOs: Output path (Pins 8-15)
+        .uio_oe(uio_oe_def),   // IOs: Enable path (active high: 1=drive, 0=high-Z)
+        .clk(clk),
+        .rst_n(rst_n),
     );
 
-    dummy_worker sub_module_1 (
-        .clk(clk), .rst_n(rst_n),
-        .module_enable (addresser == 3'd1), 
-        .ctrl_payload  (shared_ctrl), 
-        .data_payload  (shared_data),
-        .out_dedicated (mod1_uo_out), 
-        .out_bus_write (mod1_uio_out), 
-        .out_bus_oe    (mod1_uio_oe)
+    logic_tester testbench(
+
+        VDD_1V65(ua[0]),
+        .ui_in(ui_in),    // Dedicated inputs (Pins 0-7)
+        .uo_out(uo_000),   // Dedicated outputs (Pins 16-23)
+        .uio_in(uio_in),   // IOs: Input path (Pins 8-15)
+        .uio_out(uio_out_000),  // IOs: Output path (Pins 8-15)
+        .uio_oe(uio_oe_000),   // IOs: Enable path (active high: 1=drive, 0=high-Z)
+        .clk(clk),
+        .rst_n(rst_n),
     );
 
-    dummy_worker sub_module_2 (
-        .clk(clk), .rst_n(rst_n),
-        .module_enable (addresser == 3'd2), 
-        .ctrl_payload  (shared_ctrl), 
-        .data_payload  (shared_data),
-        .out_dedicated (mod2_uo_out), 
-        .out_bus_write (mod2_uio_out), 
-        .out_bus_oe    (mod2_uio_oe)
+    tt_um_core_commander commander_inst (
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .ui_in                  (ui_in), 
+        
+        // Output routing
+        .uo_out                 (commander_uo_out),
+        .tracker                (commander_tracker),
+        
+        // Inputs from Core
+        .b2t_translation_err    (b2t_translation_err),
+        .microcode_miss         (microcode_miss),
+        .single_execute_ack     (single_execute_ack),
+        
+        // Internal Controller Outputs
+        .o_microcode_fence      (o_microcode_fence),
+        .o_direct_instruction   (o_direct_instruction),
+        .show_tracker           (show_tracker),
+        .register_read_stage    (register_read_stage),
+        .register_read_id       (register_read_id),
+        .is_read                (is_read),
+        .single_execute         (single_execute),
+        .soft_reset             (soft_reset),
+        .thread_select          (thread_select)
     );
-//multiplexer
-    reg [7:0] active_uo_out, active_uio_out, active_uio_oe;
     
+    //multiplexer
+    reg [7:0] uo_out_reg;
+    reg [7:0] uio_out_reg;
+    reg [7:0] uio_oe_reg;
 
-    //this is a dummy function to be replaced later
     always @(*) begin
-        case (addresser)
-            3'd0: begin
-                active_uo_out  = mod0_uo_out;
-                active_uio_out = mod0_uio_out;
-                active_uio_oe  = mod0_uio_oe;
+        case (mux_sel)
+            3'b000: begin
+                uo_out_reg  = uo_000;
+                uio_out_reg = uio_out_000;
+                uio_oe_reg  = uio_oe_000;
             end
-            3'd1: begin
-                active_uo_out  = mod1_uo_out;
-                active_uio_out = mod1_uio_out;
-                active_uio_oe  = mod1_uio_oe;
+            3'b001: begin
+                uo_out_reg  = uo_001;
+                uio_out_reg = uio_out_def;
+                uio_oe_reg  = uio_oe_def;
             end
-            3'd2: begin
-                active_uo_out  = mod2_uo_out;
-                active_uio_out = mod2_uio_out;
-                active_uio_oe  = mod2_uio_oe;
+            3'b111: begin
+                uo_out_reg  = uo_111;
+                uio_out_reg = uio_out_111;
+                uio_oe_reg  = uio_oe_111;
             end
-            default: begin      
-                // Failsafe for unassigned addresses: output zeros, release the bus
-                active_uo_out  = 8'h00;
-                active_uio_out = 8'h00;
-                active_uio_oe  = 8'h00; 
+            default: begin // Covers 010, 011, 100, 101, 110
+                uo_out_reg  = uo_def;
+                uio_out_reg = uio_out_def;
+                uio_oe_reg  = uio_oe_def;
             end
         endcase
     end
 
-    // Drive the physical Tiny Tapeout pins
-    assign uo_out  = active_uo_out;
-    assign uio_out = active_uio_out;
-    assign uio_oe  = active_uio_oe;
+    assign uo_out  = uo_out_reg;
+    assign uio_out = uio_out_reg;
+    assign uio_oe  = uio_oe_reg;
+
+    // Tie off unused signals to prevent synthesis warnings
+    wire _unused = &{ena, 1'b0};
 endmodule

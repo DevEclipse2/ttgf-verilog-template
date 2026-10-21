@@ -2,11 +2,33 @@
   "meta": {
     "flow": "Classic",
     "substituting_steps": {
-      "KLayout.Render": null
+      "KLayout.Render": null,
+      "Magic.DRC": null,
+      "KLayout.DRC": null,
+      "KLayout.XOR": null
     }
   },
-  
-  "//": "--- STANDARD TINY TAPEOUT VARIABLES ---",
+
+  "//_1": "--- 5.0V TIMING CORNERS (tt_025C_5v00) ---",
+  "DEFAULT_CORNER": "nom_tt_025C_5v00",
+  "STA_CORNERS": [
+    "nom_tt_025C_5v00",
+    "nom_ss_125C_4v50",
+    "nom_ff_n40C_5v50"
+  ],
+  "LIB": {
+    "*_tt_025C_5v00": [
+      "pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__tt_025C_5v00.lib"
+    ],
+    "*_ss_125C_4v50": [
+      "pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ss_125C_4v50.lib"
+    ],
+    "*_ff_n40C_5v50": [
+      "pdk_dir::libs.ref/gf180mcu_fd_sc_mcu7t5v0/lib/gf180mcu_fd_sc_mcu7t5v0__ff_n40C_5v50.lib"
+    ]
+  },
+
+  "//_2": "--- STANDARD TINY TAPEOUT VARIABLES ---",
   "PL_TARGET_DENSITY_PCT": 40,
   "CLOCK_PERIOD": 20,
   "PL_RESIZER_HOLD_SLACK_MARGIN": 0.1,
@@ -15,32 +37,35 @@
   "LINTER_INCLUDE_PDK_MODELS": 1,
   "CLOCK_PORT": "clk",
 
-  "//": "these are placeholders",
-  "//": "--- CUSTOM HARD MACRO INTEGRATION (OPENLANE 2) ---",
+  "//_3": "--- CUSTOM HARD MACRO INTEGRATION (OPENLANE 2) ---",
   "MACRO_PLACEMENT_CFG": "dir::macro_placement.cfg",
   "MACROS": {
-    "my_ternary_macro": {
+    "example_module": {
       "gds": [
-        "dir::../gds/my_ternary_macro.gds"
+        "dir::../gds/example_module.gds"
       ],
       "lef": [
-        "dir::../lef/my_ternary_macro.lef"
+        "dir::../lef/example_module.lef"
       ],
       "vh": [
-        "dir::../src/my_ternary_macro.blackbox.v"
+        "dir::../src/example_module.blackbox.v"
       ]
     }
   },
 
-  "//": "--- 3.3V POWER DELIVERY NETWORK OVERRIDES ---",
+  "//_4": "--- 5.0V POWER DELIVERY & ANALOG 2.5V PROTECTION ---",
+  "VDD_NETS": ["VDD"],
+  "GND_NETS": ["VSS"],
   "PDN_MACRO_CONNECTIONS": [
-    ".*u_ternary_macro VDD_3V3 VSS vdd vss"
+    ".*u_macro VDD VSS VDD_5V0 VSS"
   ],
   "PDN_CONNECT_MACROS_TO_GRID": true,
   "PDN_ENABLE_GLOBAL_CONNECTIONS": true,
-  "PDN_CFG": "dir::pdn_cfg.tcl",
+  "PDN_CFG": "dir::apply_ndr.tcl",
+  "RSZ_DONT_TOUCH_RX": "ua\\[0\\]|mid_rail_2v5",
+  "PNR_SDC_FILE": "dir::apply_ndr.tcl",
 
-  "//": "--- WAFER SIZING & ROUTING ---",
+  "//_5": "--- WAFER SIZING & ROUTING ---",
   "RUN_KLAYOUT_XOR": 0,
   "RUN_KLAYOUT_DRC": 0,
   "DESIGN_REPAIR_BUFFER_OUTPUT_PORTS": 0,
@@ -55,17 +80,8 @@
   "FP_PDN_VPITCH": 38.87,
   "RUN_CTS": 1,
   "FP_PDN_MULTILAYER": 0,
-  
 
-
-  "//": "extra rules here",
-  "hooks": {
-  "pre": {
-    "OpenROAD.GlobalRouting": "dir::apply_ndr.tcl"
-  }
-  },
-
-  "//": "--- MAGIC DRC & EXTRACTION BYPASSES FOR ANALOG TERNARY LOGIC ---",
+  "//_6": "--- MAGIC DRC & EXTRACTION BYPASSES FOR ANALOG TERNARY LOGIC ---",
   "MAGIC_DEF_LABELS": 0,
   "MAGIC_WRITE_LEF_PINONLY": 1,
   "MAGIC_EXT_ABSTRACT": true,

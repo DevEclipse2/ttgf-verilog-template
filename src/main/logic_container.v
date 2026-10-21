@@ -4,22 +4,18 @@
 //also logic testing etc is done somewhere else, preferably somewhere that i can't see
 module logic_container(
     
-    inout VDD_3V3,
     inout VDD_1V65,
-    inout VSS,
-
     input clk,
     input rst_n,
 
-
-    `ifdef USE_POWER_PINS
-    inout VPWR,               // 3.3V from TT wrapper
-    inout VGND                // 0V from TT wrapper
-    `endif
-
+    input  wire [7:0] ui_in,    // Dedicated inputs (Pins 0-7)
+    output wire [7:0] uo_out,   // Dedicated outputs (Pins 16-23)
+    input  wire [7:0] uio_in,   // IOs: Input path (Pins 8-15)
+    output wire [7:0] uio_out,  // IOs: Output path (Pins 8-15)
+    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 1=drive, 0=high-Z)
 );
 
-(* keep = "true" *) wire mid_rail_1v65 = ua[0];
+
 
 
 //for thread 0
@@ -67,10 +63,8 @@ alu core_0 (
     the alu has a floating priority system and decides to operate upon the data
     it has been slimmed down to stateless
     */
-    
-    VDD_3V3(VDD_3V3),
-    VDD_1V65(VDD_1V65),
-    VSS(VSS),
+     
+    .VDD_1V65(VDD_1V65),
 
     .clk(clk),
     .rst_n(rst_n),
@@ -192,28 +186,29 @@ microcode microcode_parser
         output  microcode_idle,
 );
 
-wire [23:0] register_from_reg_t0;
-wire [23:0] register_to_reg_t0;
-wire w_en_t0;
-wire r_en_t0;
-wire pc_increment_t0;
-wire [3:0] trit_address_reg_t0;
-wire select_cmd_t0;
+//thread 0 interconnects 
+    wire [23:0] register_from_reg_t0;
+    wire [23:0] register_to_reg_t0;
+    wire w_en_t0;
+    wire r_en_t0;
+    wire pc_increment_t0;
+    wire [3:0] trit_address_reg_t0;
+    wire select_cmd_t0;
 
-wire [23:0] command_pipe_in_t0;
-wire [3:0] commandpipe_address_t0;
-wire write_enable;
+    wire [23:0] command_pipe_in_t0;
+    wire [3:0] commandpipe_address_t0;
+    wire write_enable;
 
-wire [7:0] macro_op_wire_t0;
-wire [7:0] action_ctr_wire_t0;
-wire [7:0] param_ctr_wire_t0;
-wire [3:0] micro_cmd_wire_t0;
-wire [3:0] micro_param0_wire_t0;
-wire [3:0] micro_param1_wire_t0;
-wire [3:0] micro_param2_wire_t0;
-wire micro_req_wire_t0;
-wire micro_sent_wire_t0;
-wire micro_flush_wire_t0;
+    wire [7:0] macro_op_wire_t0;
+    wire [7:0] action_ctr_wire_t0;
+    wire [7:0] param_ctr_wire_t0;
+    wire [3:0] micro_cmd_wire_t0;
+    wire [3:0] micro_param0_wire_t0;
+    wire [3:0] micro_param1_wire_t0;
+    wire [3:0] micro_param2_wire_t0;
+    wire micro_req_wire_t0;
+    wire micro_sent_wire_t0;
+    wire micro_flush_wire_t0;
 
 //each thread
 secondary_register thread0_2nd_reg (

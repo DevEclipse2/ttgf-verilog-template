@@ -1,10 +1,36 @@
+/*
+error types
+
+b2t translate error
+microcode illegal error
+pc overflow error
+micro op action overflow error
+micro op param overflow error
+register overflow errors
+
+0-2 unused stuff
+3-6 command op bits
+7 read ack from fpga
+
+uo_out
+0 statemachine bit 0 / command buffer bit 0 or 1 (when reading from command buffer, active command is read as 0 and next command is 1)/ register address bit 0 (when read/write to register)
+1 statemachine bit 1 / register address bit 1
+2 register address bit 2
+3 shows selected thread bit 0 / register address bit 3
+4 shows selected thread bit 1/ register address bit 4
+5 command op read ack
+6 the new error flag (goes up when theres a new error and shows the error id on 0-2 with thread address on 3-4)
+7 data bus prepared/ handshake 
+*/
+
+
 module tt_um_core_commander (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
-    input  wire       ena,
     input  wire       clk,
     input  wire       rst_n,
     output wire [7:0] tracker,
+    output wire show_tracker, 
 
 
     //from alu
@@ -12,47 +38,60 @@ module tt_um_core_commander (
     input wire microcode_miss,
 
     //internal routing and stuff below
-    output wire o_microcode_fence,  //this pauses cpu execution after each micro operation
-    output wire o_direct_instruction, //bypasses command buffers
-    output wire show_tracker, 
-    output reg  purge_microcode,
-    input  wire purge_microcode_ack,
-    output reg [1:0] register_read_stage,
-    output reg [2:0] register_read_id,
-    output reg is_read,
-    output reg single_execute,
-    input  wire single_execute_ack,
-    output reg [1:0] thread_select //this manages shadow volumes but hush
+    output wire o_microcode_fence_t0,  //this pauses cpu execution after each micro operation
+    output reg  purge_microcode_t0,
+    input  wire purge_microcode_ack_t0,
+    output reg [1:0] register_read_stage_t0,
+    output reg [2:0] register_read_id_t0,
+    output reg is_read_t0,
+    output reg single_execute_t0,
+    input  wire single_execute_ack_t0,
+    //thread 1     
+    //etc etc
+    output reg [1:0] thread_select  //this allows us to specify which to read from when dumping register volumes
 );
-    
-
 
     //overcommand opcode
     wire [3:0] cmd_opcode   = ui_in[6:3];
 
     //this section holds internal state governance
-    reg [7:0]   error_tracker = 0;
-    reg [7:0]   microcode_miss_tracker = 0;
+    reg [7:0]   error_tracker_t0 = 0;
+    reg [7:0]   error_tracker_t1 = 0;
+    reg [7:0]   error_tracker_t2 = 0;
 
-    assign tracker = showing_errors ? error_tracker :
-    showing_microcode_miss ? microcode_miss_tracker : 
-    8'b00000000;
-    reg microcode_fence = 1'b0; //this tracks the microcode fencing behaviour
-    reg direct_instruction = 1'b0;
-    reg showing_errors = 1'b0;
-    reg showing_microcode_miss = 1'b0;
-    assign show_tracker = showing_errors | showing_microcode_miss; // cannot be both hig 
-    reg freeze_core = 1'b0;
+    reg [1:0] show_tracker_id;
+    
+
+    //the tracker should be only assigned to a single error tracker of a single thread, and thread count cannot increment until
+    //fpga sends signal to stop transmitting data and then the thread can increment
+    always @(*) begin
+        case(show_tracker_id)
+            2'b00: //assign tracker to error_tracker_t0, show_tracker 1
+            2'b01: //assign tracker to error_tracker_t1, show_tracker 1
+            2'b10: //assign tracker to error_tracker_t2, show_tracker 1
+            2'b11: //assign tracker to none, show_tracker 0 
+        endcase
+
+    end
+
+    reg microcode_fence_t0    = 1'b0; //this tracks the microcode fencing behaviour
+    reg showing_errors_t0     = 1'b0;
+    reg freeze_core_t0 = 1'b0;
     
     reg command_op_ack = 1'b0;
     reg bus_ready = 1'b0;
     assign uo_out [4] = command_op_ack;
     assign uo_out [7] = bus_ready;
 
-    assign o_direct_instruction = direct_instruction;
     assign o_microcode_fence = microcode_fence;
     //internal state
+
+
     reg [2:0] controller_state      = 3'b000;
+
+    //the controller should only handle setup of 1 thread at a time, and these operations shoould be for the current thread
+    //also make sure that the thread increment command does NOTHING when the controller is doing stuff
+
 
     localparam  state_idle          = 3'b000;
     localparam  state_rcv_pc        = 3'b001;    //receive new program counter FROM fpga
@@ -63,6 +102,7 @@ module tt_um_core_commander (
     localparam  state_cmd_clr       = 3'b110;    //clear all command buffers
     localparam  state_cmd_trn       = 3'b111;    //transmit command buffer to fpga
     reg err_delay;
+
 always @(posedge clk) begin
     err_delay <= b2t_translation_err;
     if (b2t_translation_err && !err_delay) begin
@@ -85,7 +125,7 @@ end
         end
         else begin
             
-            if(ena) begin
+            if(ui_in[2:0] == 3'b001) begin
                 if(single_execute_ack) begin
                     single_execute <= 1'b0;                
                 end
@@ -277,7 +317,7 @@ end
                     4'b0011: begin
                         thread_select <= (thread_select == 2'b10) ? 2'b00 : (thread_select + 1'b1);
                     end
-                    4'b0100: begin
+                    4'b0100: begin //micro op fence (on each thread instance)
                         if (microcode_fence) begin
                             if(!single_execute_ack) begin
                             single_execute <= 1'b1;
@@ -287,6 +327,7 @@ end
                         end
                     end//microop fence (step execute), running this again allows 1 cpu step
                     4'b0101: begin
+                        //set program counter (for each thread)
                         controller_state <= state_rcv_pc;
                         register_read_stage <= 2'b0;
                         bus_ready <= 1'b0;
@@ -295,9 +336,12 @@ end
                         showing_microcode_miss <= 1'b0;
                         showing_errors <= 1'b0;
                     end
-                    4'b0110: begin//command buffer dump
+                    4'b0110: begin
+                        //command dump (for the currently addressed thread)
+                        //bus returns the currently executing macro op
                     end
                     4'b0111: begin
+                        //register dummp
                         controller_state <= state_trn_reg;
                         register_read_stage <= 2'b0;
                         bus_ready <= 1'b0;
@@ -307,11 +351,14 @@ end
                         showing_errors <= 1'b0;
                     end
                     4'b1000: begin
+                        //change to per-thread basis 
                     freeze_core <= 1'b0; //unfreezes core or stops stepping
                     microcode_fence <= 1'b0;
                     end
-                    4'b1001: //command buffer clear
-                    4'b1010: freeze_core <= 1'b1;//freeze core
+                    4'b1001: begin
+                        //command buffer clear on per thread basis
+                    end
+                    4'b1010: //replace with one of the error counter error show flags
                     4'b1011: begin
                         //regset
                         controller_state <= state_rcv_reg;
@@ -322,18 +369,16 @@ end
                         showing_microcode_miss <= 1'b0;
                         showing_errors <= 1'b0;
                     end
-                    4'b1100: purge_microcode <= 1'b1;//purge microcode
+                    4'b1100: //replace with one of the error counter error show flags
                     4'b1101: begin
-                        showing_microcode_miss <= 1'b0;
                         showing_errors <= ~showing_errors;
                         //show error count
-                        //sets microcode miss count to off
+                        //sets microcode miss count to off 
                         //output bus
+                        // the active thread error tracker will be held to high 
                     end
                     4'b1110: begin
-                        showing_errors <= 1'b0;
-                        showing_microcode_miss <= ~showing_microcode_miss;
-                        //show microcode miss count
+                        // replace with one of the error counter error show flags
                     end
                 endcase
                 command_op_ack <= 1'b1;
