@@ -36,7 +36,7 @@ wire decode_0111_a_error;//adder
 wire decode_0111_b_error;
 wire decode_0111_c_error;
 always @(*) begin
-    case(ui_in[7:0])
+    case(ui_in[7:3])
         4'b0000: begin
             uo_out[1:0] = passthrough_binary_result;
             uo_out[6:2] = 5'd0;
@@ -84,18 +84,13 @@ always @(*) begin
             uo_out[7]   = decode_1000_error;
         end
         4'b1001: begin
-            uo_out[1:0] = ram_binary_result;
-            uo_out[6:2] = 5'd0;
-            uo_out[7]   = decode_1000_error;
-        end
-        4'b1001: begin
             uo_out[1:0] = mux_binary_result_a;
             uo_out[3:2] = mux_binary_result_b;
             uo_out[5:4] = mux_binary_result_c;
             uo_out[6]   = 1'd0;
             uo_out[7]   = decode_1001_a_error | decode_1001_b_error;
         end
-        4'b1001: begin
+        4'b1010: begin
             uo_out[1:0] = sti_binary_result_e;
             uo_out[6:2] = 5'd0;
             uo_out[7]   = decode_1010_error;
@@ -133,7 +128,7 @@ end
     (
         .VDD_1V65(VDD_1V65),
         .ternary_input(nti_ternary_wire),
-        .ternary_result(nti_res_ternary_wire),
+        .ternary_result(nti_res_ternary_wire)
     );
     native_t2b nti_t2b
     (
@@ -156,7 +151,7 @@ end
     (
         .VDD_1V65(VDD_1V65),
         .ternary_input(pti_ternary_wire),
-        .ternary_result(pti_res_ternary_wire),
+        .ternary_result(pti_res_ternary_wire)
     );
     native_t2b pti_t2b
     (
@@ -179,7 +174,7 @@ end
     (
         .VDD_1V65(VDD_1V65),
         .ternary_input(sti_ternary_wire),
-        .ternary_result(sti_res_ternary_wire),
+        .ternary_result(sti_res_ternary_wire)
     );
     native_t2b sti_t2b
     (
@@ -256,14 +251,14 @@ end
     wire con_ternary_wire_b;
     wire con_res_ternary_wire;
     wire [1:0] con_binary_result;
-    native_b2t_secure max_b2t_a
+    native_b2t_secure con_b2t_a
     (
         .VDD_1V65(VDD_1V65),
         .binary_input(uio_in[1:0]),
         .ternary_result(con_ternary_wire_a),
         .decode_error(decode_0110_a_error)
     );
-    native_b2t_secure max_b2t_b
+    native_b2t_secure con_b2t_b
     (
         .VDD_1V65(VDD_1V65),
         .binary_input(uio_in[3:2]),
@@ -311,7 +306,7 @@ end
         .input_2(add_ternary_wire_b),
         .carry_in(add_ternary_wire_c),
         .result(add_ternary_wire_res),
-        .carry(add_ternary_wire_res)
+        .carry(add_ternary_wire_carry)
     );
     native_t2b add_t2b_r
     (
@@ -415,7 +410,7 @@ end
     (
         .VDD_1V65(VDD_1V65),
         .ternary_input(sti_ternary_wire_e),
-        .ternary_result(sti_res_ternary_wire)
+        .ternary_result(sti_res_ternary_wire_e)
     );
     native_t2b sti_t2b_e
     (

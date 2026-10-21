@@ -4,3 +4,7 @@
 finish up logic tester
 do work on thread_command
 check for most feature completion
+
+remember to wire up error tracking and handle core dumping
+
+check microcode delays

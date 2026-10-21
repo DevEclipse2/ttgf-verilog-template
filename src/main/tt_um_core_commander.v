@@ -1,5 +1,7 @@
-`default_nettype none
 
+//original written by azzy
+//updated by gemini
+//fixed by azzy
 module tt_um_core_commander (
     input  wire [7:0] ui_in,    // [2:0] enable tag (3'b001), [6:3] cmd_opcode, [7] FPGA read/write ack
     output wire [7:0] uo_out,   // Multiplexed status / address / error / handshake outputs
@@ -97,12 +99,12 @@ module tt_um_core_commander (
     // -------------------------------------------------------------------------
     // 6 Error Counter Arrays (3 Threads x 6 Error Types) & Latched Offender Info
     // -------------------------------------------------------------------------
-    reg [7:0] err_b2t_t         [0:2]; // ID 3'd0
-    reg [7:0] err_ucode_t       [0:2]; // ID 3'd1
-    reg [7:0] err_pc_ovf_t      [0:2]; // ID 3'd2
-    reg [7:0] err_uop_act_ovf_t [0:2]; // ID 3'd3
-    reg [7:0] err_uop_prm_ovf_t [0:2]; // ID 3'd4
-    reg [7:0] err_reg_ovf_t     [0:2]; // ID 3'd5
+    reg [7:0] err_b2t_t         [0:2]; // ID 3'd0       //b2t translation error
+    reg [7:0] err_ucode_t       [0:2]; // ID 3'd1       //microcode
+    reg [7:0] err_pc_ovf_t      [0:2]; // ID 3'd2       //program counter overflow
+    reg [7:0] err_uop_act_ovf_t [0:2]; // ID 3'd3       //micro pc action overflow
+    reg [7:0] err_uop_prm_ovf_t [0:2]; // ID 3'd4       //micro pc param overflow
+    reg [7:0] err_reg_ovf_t     [0:2]; // ID 3'd5       //register overflow
 
     //these are asynchronously assigned
     reg [2:0] prev_b2t_err;
@@ -127,6 +129,7 @@ module tt_um_core_commander (
     //handles showing priority
     always @(*) begin
         case (show_tracker_id)
+            //thread 0
             2'b00: begin
                 show_tracker = 1'b1;
                 case (error_id_select)
@@ -139,6 +142,7 @@ module tt_um_core_commander (
                     default: tracker = 8'h00;
                 endcase
             end
+            //thread 1
             2'b01: begin
                 show_tracker = 1'b1;
                 case (error_id_select)
@@ -151,6 +155,7 @@ module tt_um_core_commander (
                     default: tracker = 8'h00;
                 endcase
             end
+            //thread 2
             2'b10: begin
                 show_tracker = 1'b1;
                 case (error_id_select)
@@ -163,6 +168,7 @@ module tt_um_core_commander (
                     default: tracker = 8'h00;
                 endcase
             end
+            // zero threads
             default: begin // 2'b11: Off state
                 show_tracker = 1'b0;
                 tracker      = 8'h00;
@@ -176,8 +182,10 @@ module tt_um_core_commander (
     reg command_op_ack;
     reg bus_ready;
 
+    //these show what mode of bus access we are in
     wire is_reg_mode = (controller_state == state_rcv_reg) || (controller_state == state_trn_reg) ||
                        (controller_state == state_rcv_pc)  || (controller_state == state_trn_pc);
+    // command mode means we are transmitting our commands out
     wire is_cmd_mode = (controller_state == state_cmd_trn);
 
     // Priority:
@@ -186,6 +194,7 @@ module tt_um_core_commander (
     // 3. Command Buffer Read    -> uo_out[4:3] = thread_select, uo_out[2:1] = state[1:0], uo_out[0] = active(0)/next(1)
     // 4. Default Idle/Status    -> uo_out[4:3] = thread_select, uo_out[2] = 0, uo_out[1:0] = controller_state[1:0]
 
+    //these assign the uo to what i've specified
     assign uo_out[0] = is_reg_mode    ? register_address[0]   :
                        new_error_flag ? offending_error_id[0] :
                        is_cmd_mode    ? register_read_stage[0]:
@@ -197,7 +206,7 @@ module tt_um_core_commander (
 
     assign uo_out[2] = is_reg_mode    ? register_address[2]   :
                        new_error_flag ? offending_error_id[2] :
-                                        1'b0;
+                                        controller_state[2];    //added this bit
 
     assign uo_out[3] = is_reg_mode    ? register_address[3]   :
                        new_error_flag ? offending_thread[0]   :
@@ -215,17 +224,30 @@ module tt_um_core_commander (
     // Main Sequential Logic
     // -------------------------------------------------------------------------
     integer i;
-
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            for (i = 0; i < 3; i = i + 1) begin
-                err_b2t_t[i]         <= 8'b0;
-                err_ucode_t[i]       <= 8'b0;
-                err_pc_ovf_t[i]      <= 8'b0;
-                err_uop_act_ovf_t[i] <= 8'b0;
-                err_uop_prm_ovf_t[i] <= 8'b0;
-                err_reg_ovf_t[i]     <= 8'b0;
-            end
+            
+            //replaced that with hard coded stuff cause i dont trust the verilog
+                err_b2t_t[0]         <= 8'b0;
+                err_ucode_t[0]       <= 8'b0;
+                err_pc_ovf_t[0]      <= 8'b0;
+                err_uop_act_ovf_t[0] <= 8'b0;
+                err_uop_prm_ovf_t[0] <= 8'b0;
+                err_reg_ovf_t[0]     <= 8'b0;
+            //err thread 1
+                err_b2t_t[1]         <= 8'b0;
+                err_ucode_t[1]       <= 8'b0;
+                err_pc_ovf_t[1]      <= 8'b0;
+                err_uop_act_ovf_t[1] <= 8'b0;
+                err_uop_prm_ovf_t[1] <= 8'b0;
+                err_reg_ovf_t[1]     <= 8'b0;
+            //err thread 2
+                err_b2t_t[2]         <= 8'b0;
+                err_ucode_t[2]       <= 8'b0;
+                err_pc_ovf_t[2]      <= 8'b0;
+                err_uop_act_ovf_t[2] <= 8'b0;
+                err_uop_prm_ovf_t[2] <= 8'b0;
+                err_reg_ovf_t[2]     <= 8'b0;
             prev_b2t_err        <= 3'b0;
             prev_ucode_err      <= 3'b0;
             prev_pc_ovf_err     <= 3'b0;
@@ -269,51 +291,48 @@ module tt_um_core_commander (
             prev_uop_prm_err <= micro_op_param_ovf_err;
             prev_reg_ovf_err <= reg_overflow_err;
 
-            for (i = 0; i < 3; i = i + 1) begin
-                if (b2t_translation_err[i] && !prev_b2t_err[i]) begin
-                    err_b2t_t[i]       <= err_b2t_t[i] + 1'b1;
-                    new_error_flag     <= 1'b1;
-                    offending_thread   <= i[1:0];
-                    offending_error_id <= 3'd0;
-                    microcode_fence[i] <= 1'b1; // Automatically pause/fence offending thread
-                end
-                if (microcode_illegal_err[i] && !prev_ucode_err[i]) begin
-                    err_ucode_t[i]     <= err_ucode_t[i] + 1'b1;
-                    new_error_flag     <= 1'b1;
-                    offending_thread   <= i[1:0];
-                    offending_error_id <= 3'd1;
-                    microcode_fence[i] <= 1'b1;
-                end
-                if (pc_overflow_err[i] && !prev_pc_ovf_err[i]) begin
-                    err_pc_ovf_t[i]    <= err_pc_ovf_t[i] + 1'b1;
-                    new_error_flag     <= 1'b1;
-                    offending_thread   <= i[1:0];
-                    offending_error_id <= 3'd2;
-                    microcode_fence[i] <= 1'b1;
-                end
-                if (micro_op_action_ovf_err[i] && !prev_uop_act_err[i]) begin
-                    err_uop_act_ovf_t[i] <= err_uop_act_ovf_t[i] + 1'b1;
-                    new_error_flag       <= 1'b1;
-                    offending_thread     <= i[1:0];
-                    offending_error_id   <= 3'd3;
-                    microcode_fence[i]   <= 1'b1;
-                end
-                if (micro_op_param_ovf_err[i] && !prev_uop_prm_err[i]) begin
-                    err_uop_prm_ovf_t[i] <= err_uop_prm_ovf_t[i] + 1'b1;
-                    new_error_flag       <= 1'b1;
-                    offending_thread     <= i[1:0];
-                    offending_error_id   <= 3'd4;
-                    microcode_fence[i]   <= 1'b1;
-                end
-                if (reg_overflow_err[i] && !prev_reg_ovf_err[i]) begin
-                    err_reg_ovf_t[i]   <= err_reg_ovf_t[i] + 1'b1;
-                    new_error_flag     <= 1'b1;
-                    offending_thread   <= i[1:0];
-                    offending_error_id <= 3'd5;
-                    microcode_fence[i] <= 1'b1;
+            //explicit collision handling
+            
+            begin : error_evaluation
+                reg error_this_tick;
+                error_this_tick = 1'b0; // Resets at the start of every clock edge
+            
+                for (i = 0; i < 3; i = i + 1) begin
+                    // Check if ANY error triggered for this thread on this clock cycle
+                    if ((b2t_translation_err[i] && !prev_b2t_err[i]) ||
+                        (microcode_illegal_err[i] && !prev_ucode_err[i]) ||
+                        (pc_overflow_err[i] && !prev_pc_ovf_err[i]) ||
+                        (micro_op_action_ovf_err[i] && !prev_uop_act_err[i]) ||
+                        (micro_op_param_ovf_err[i] && !prev_uop_prm_err[i]) ||
+                        (reg_overflow_err[i] && !prev_reg_ovf_err[i])) begin
+                        
+                        if (error_this_tick) begin
+                            // COLLISION: Another thread already threw an error this exact cycle
+                            offending_thread <= 2'b11;
+                        end else begin
+                            // First error detected this cycle, latch its details
+                            offending_thread <= i[1:0];
+                            if      (b2t_translation_err[i] && !prev_b2t_err[i])           offending_error_id <= 3'd0;
+                            else if (microcode_illegal_err[i] && !prev_ucode_err[i])       offending_error_id <= 3'd1;
+                            else if (pc_overflow_err[i] && !prev_pc_ovf_err[i])            offending_error_id <= 3'd2;
+                            else if (micro_op_action_ovf_err[i] && !prev_uop_act_err[i])   offending_error_id <= 3'd3;
+                            else if (micro_op_param_ovf_err[i] && !prev_uop_prm_err[i])    offending_error_id <= 3'd4;
+                            else if (reg_overflow_err[i] && !prev_reg_ovf_err[i])          offending_error_id <= 3'd5;
+                        end
+
+                        error_this_tick    = 1'b1;
+                        new_error_flag     <= 1'b1;
+                        microcode_fence[i] <= 1'b1; // Auto-fence the offending thread
+                    end
+                    // Increment the individual counters regardless of collisions
+                    if (b2t_translation_err[i] && !prev_b2t_err[i])           err_b2t_t[i]         <= err_b2t_t[i] + 1'b1;
+                    if (microcode_illegal_err[i] && !prev_ucode_err[i])       err_ucode_t[i]       <= err_ucode_t[i] + 1'b1;
+                    if (pc_overflow_err[i] && !prev_pc_ovf_err[i])            err_pc_ovf_t[i]      <= err_pc_ovf_t[i] + 1'b1;
+                    if (micro_op_action_ovf_err[i] && !prev_uop_act_err[i])   err_uop_act_ovf_t[i] <= err_uop_act_ovf_t[i] + 1'b1;
+                    if (micro_op_param_ovf_err[i] && !prev_uop_prm_err[i])    err_uop_prm_ovf_t[i] <= err_uop_prm_ovf_t[i] + 1'b1;
+                    if (reg_overflow_err[i] && !prev_reg_ovf_err[i])          err_reg_ovf_t[i]     <= err_reg_ovf_t[i] + 1'b1;
                 end
             end
-
             // -----------------------------------------------------------------
             // 2. Clear Handshaked Sub-Module Pulses on ACK
             // -----------------------------------------------------------------
@@ -366,14 +385,20 @@ module tt_um_core_commander (
                                     controller_state    <= state_idle;
                                 end else if (fpga_ack) begin
                                     if (bus_ready) begin
-                                        bus_ready        <= 1'b0;
-                                        register_address <= register_address + 1'b1;
+                                        bus_ready <= 1'b0;
+                                        if (register_read_stage == 2'b10) begin
+                                            // 3 bytes finished, move to the next 24-bit Register ID
+                                            register_read_stage <= 2'b00;
+                                            register_address    <= register_address + 1'b1;
+                                        end else begin
+                                            // Next byte chunk of the current register
+                                            register_read_stage <= register_read_stage + 1'b1;
+                                        end
                                     end
                                 end else begin
                                     if (!bus_ready) bus_ready <= 1'b1;
                                 end
                             end
-
                             // -------------------------------------------------
                             // Transmit 8-bit Macro-Op Command Buffer (0=Active, 1=Next)
                             // -------------------------------------------------
@@ -392,7 +417,6 @@ module tt_um_core_commander (
                                     if (!bus_ready) bus_ready <= 1'b1;
                                 end
                             end
-
                             // -------------------------------------------------
                             // Command Buffer Clear Handshake Wait
                             // -------------------------------------------------
@@ -546,7 +570,6 @@ module tt_um_core_commander (
 
                         default: ;
                     endcase
-
                     command_op_ack <= 1'b1;
                 end
             end
