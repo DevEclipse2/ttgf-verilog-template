@@ -26,8 +26,8 @@ module microcode #(
         output [3:0] param2_t0,
 
         //this shows the resulting positions of the main in case the thread manager needs it for anything 
-        output reg [6:0] microcode_action_offset_t0_res, 
-        output reg [6:0] microcode_param_offset_t0_res,
+        // output reg [6:0] microcode_action_offset_t0_res, 
+        // output reg [6:0] microcode_param_offset_t0_res,
 
     // ================= THREAD 1 INTERFACE =================
         input  wire [7:0]  macro_op_t1,
@@ -40,8 +40,8 @@ module microcode #(
         output reg  [3:0]  param0_t1,
         output reg  [3:0]  param1_t1,
         output reg  [3:0]  param2_t1,
-        output reg  [6:0]  microcode_action_offset_t1_res,
-        output reg  [6:0]  microcode_param_offset_t1_res,
+        // output reg  [6:0]  microcode_action_offset_t1_res,
+        // output reg  [6:0]  microcode_param_offset_t1_res,
 
     // ================= THREAD 2 INTERFACE =================
         input  wire [7:0]  macro_op_t2,
@@ -54,15 +54,15 @@ module microcode #(
         output reg  [3:0]  param0_t2,
         output reg  [3:0]  param1_t2,
         output reg  [3:0]  param2_t2,
-        output reg  [6:0]  microcode_action_offset_t2_res,
-        output reg  [6:0]  microcode_param_offset_t2_res,
+        // output reg  [6:0]  microcode_action_offset_t2_res,
+        // output reg  [6:0]  microcode_param_offset_t2_res,
 
     // ================= MAIN SRAM BUS =================
     // main bus
         input   [7:0] bus,
         output  [11:0] address,
         output  cycle_threads,
-        output  microcode_idle,
+        output  microcode_idle
 );
     
     reg request_data_t0;

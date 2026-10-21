@@ -1,17 +1,25 @@
-module logic_container(
+//the logic container is in charge of housing the 3 threads and 1 core plus controller
+//the overlord is a separate spectator
 
+//also logic testing etc is done somewhere else, preferably somewhere that i can't see
+module logic_container(
     
     inout VDD_3V3,
     inout VDD_1V65,
     inout VSS,
 
-
     input clk,
     input rst_n,
 
+
+    `ifdef USE_POWER_PINS
+    inout VPWR,               // 3.3V from TT wrapper
+    inout VGND                // 0V from TT wrapper
+    `endif
+
 );
 
-
+(* keep = "true" *) wire mid_rail_1v65 = ua[0];
 
 
 //for thread 0
@@ -117,6 +125,73 @@ alu core_0 (
     .multiply_o_t2(t8_t2_wire)
 );
 
+microcode microcode_parser
+(
+    .clk(clk),
+    .rst_n(rst_n),
+    
+    //thread 0 handler
+        .macro_op_t0(macro_op_wire_t0),
+        //from 1  to 31 , each micro op corresponds to 2 byte chunked reads
+        //from 32 to 112, each micro op corresponds to 4 byte chunked reads
+        //from 113 to 191, each micro op corresponds to 8 byte chunked reads
+        // uses an 1024 offset for parameters
+        // 32 x 2 + 80 x 4 + 80 x 8 = 1024
+        //anything beyond 191 is ILLEGAL and should never be seen
+        .microcode_action_offset_t0(converted_action_t0), //up to 128 but since its 4 trit to convert to this it's more like 81
+        .microcode_param_offset_t0(converted_param_t0),
+        .flush(micro_flush_wire_t0),//this forces the microcode handler to pause, flush cache and read from action position & param position, as well as macro op position
+        //chunked reads mean that you start from indexes 0 , 4 , 8 , 12, etc, but the offsets can allow it to read any position
+        //the params are chunked separately, on the same chip but with an offset
+        .next_microop(micro_req_wire_t0),//this one turns on -> off , send new ; off -> on , send new 
+        .data_ready(micro_sent_wire_t0),
+        //resulting stuff
+        .action_t0(micro_cmd_wire_t0),
+        .param0_t0(micro_param0_wire_t0),
+        .param1_t0(micro_param1_wire_t0),
+        .param2_t0(micro_param2_wire_t0),
+
+        //this shows the resulting positions of the main in case the thread manager needs it for anything 
+        //we probably don't need this cause error checking is for chuds
+        // output reg [6:0] microcode_action_offset_t0_res, 
+        // output reg [6:0] microcode_param_offset_t0_res,
+
+    // ================= THREAD 1 INTERFACE =================
+        input  wire [7:0]  macro_op_t1,
+        input  wire [6:0]  microcode_action_offset_t1,
+        input  wire [6:0]  microcode_param_offset_t1,
+        input  wire        next_microop_t1,
+        input  wire        flush_t1,
+        output reg         data_ready_t1,
+        output reg  [3:0]  action_t1,
+        output reg  [3:0]  param0_t1,
+        output reg  [3:0]  param1_t1,
+        output reg  [3:0]  param2_t1,
+        // output reg  [6:0]  microcode_action_offset_t1_res,
+        // output reg  [6:0]  microcode_param_offset_t1_res,
+
+    // ================= THREAD 2 INTERFACE =================
+        input  wire [7:0]  macro_op_t2,
+        input  wire [6:0]  microcode_action_offset_t2,
+        input  wire [6:0]  microcode_param_offset_t2,
+        input  wire        next_microop_t2,
+        input  wire        flush_t2,
+        output reg         data_ready_t2,
+        output reg  [3:0]  action_t2,
+        output reg  [3:0]  param0_t2,
+        output reg  [3:0]  param1_t2,
+        output reg  [3:0]  param2_t2,
+        // output reg  [6:0]  microcode_action_offset_t2_res,
+        // output reg  [6:0]  microcode_param_offset_t2_res,
+
+    // ================= MAIN SRAM BUS =================
+    // main bus
+        input   [7:0] bus,
+        output  [11:0] address,
+        output  cycle_threads,
+        output  microcode_idle,
+);
+
 wire [23:0] register_from_reg_t0;
 wire [23:0] register_to_reg_t0;
 wire w_en_t0;
@@ -128,6 +203,17 @@ wire select_cmd_t0;
 wire [23:0] command_pipe_in_t0;
 wire [3:0] commandpipe_address_t0;
 wire write_enable;
+
+wire [7:0] macro_op_wire_t0;
+wire [7:0] action_ctr_wire_t0;
+wire [7:0] param_ctr_wire_t0;
+wire [3:0] micro_cmd_wire_t0;
+wire [3:0] micro_param0_wire_t0;
+wire [3:0] micro_param1_wire_t0;
+wire [3:0] micro_param2_wire_t0;
+wire micro_req_wire_t0;
+wire micro_sent_wire_t0;
+wire micro_flush_wire_t0;
 
 //each thread
 secondary_register thread0_2nd_reg (
@@ -156,12 +242,16 @@ thread_command thread0_command(
     .rst_n(rst_n),
 
     //from the microcode parsers
-        input wire [3:0] command,
-        input wire [3:0] param_0,
-        input wire [3:0] param_1,
-        input wire [3:0] param_2,
-        output reg  command_req_new,
-        input  wire command_data_sent,
+        .macro_op(macro_op_wire_t0),
+        .action_counter(action_ctr_wire_t0),
+        .param_counter(param_ctr_wire_t0),
+        .flush(micro_flush_wire_t0),
+        .command(micro_cmd_wire_t0),
+        .param_0(micro_param0_wire_t0),
+        .param_1(micro_param1_wire_t0),
+        .param_2(micro_param2_wire_t0),
+        .command_req_new(micro_req_wire_t0),
+        .command_data_sent(micro_sent_wire_t0),
         // output wire ,
     
     //secondary register
@@ -195,7 +285,17 @@ thread_command thread0_command(
         output wire request_set_pc,
         output wire pipe_empty,
 );
-
+wire [6:0] converted_action_t0;
+wire [6:0] converted_param_t0;
+//short for "ternary to unsigned binary Action counter thread0"
+ternary_to_unsigned_binary_logic_convert_4t t2ubActr_t0(
+    .in_trits(action_ctr_wire_t0),
+    out_bin(converted_action_t0),
+);
+ternary_to_unsigned_binary_logic_convert_4t t2ubActr_t0(
+    .in_trits(param_ctr_wire_t0),
+    out_bin(converted_param_t0),
+);
 
 
 

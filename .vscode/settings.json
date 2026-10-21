@@ -1,8 +1,6 @@
 {
   "verilog.linting.linter": "verilator",
   "verilog.formatting.verilogHDL.formatter": "verible-verilog-format",
-  "verilog.linting.verilator.arguments": [
-        "-F",
-        "${workspaceFolder}/input.f"
-    ]
+  "verilog.linting.verilator.arguments": "-f input.f "
+
 }

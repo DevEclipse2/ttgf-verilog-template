@@ -8,8 +8,6 @@ module tt_um_triple_t_devEclipse2 (
     input  wire       clk,      // Clock 
     input  wire       rst_n     // Reset (Active low)
 );
-
-
     //the first 3 bits are separated and the rest are shared
     wire [2:0] addresser   = ui_in[2:0];
     wire [4:0] shared_ctrl = ui_in[7:3];

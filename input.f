@@ -11,10 +11,9 @@
 -y ./src/main/alu
 -y ./src/main/thread
 -y ./src/onboardController
--y ./src/substitute_macros
 -y ./src/utils
 
 # --- Source Files (Top-levels or individual files) ---
-./src/main/tt_um_core_wrapper.v
-./src/main/tt_um_core_main.v
+./src/main/tt_um_triple_t.v
 ./src/utils/coresetup.v
+./src/utils/logic_container.v

@@ -1,9 +1,11 @@
 (* blackbox *)
 module native_tritwise_3 (
     // Power & Mid-Rail
-    inout VDD_3V3,
-    inout VDD_1V65,
+    `ifdef USE_POWER_PINS
+    inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD
     inout VSS,
+    `endif
+    inout VDD_1V65,
     
     // Ternary Inputs (1 trit each)
     inout trit_in_a,

@@ -32,6 +32,8 @@ module alu(
     //command lines
     input   wire [2:0] cmd_t1,
     //
+    input   wire [2:0] tritwise_command_t1,
+
     input   wire [2:0] tritshift_tritwise_t1, //trit shifts up to 3 front and back
 
     input   wire cmd_ready_t1,
@@ -50,6 +52,8 @@ module alu(
 
     input   wire [2:0] cmd_t2,
     //
+    input   wire [2:0] tritwise_command_t2,
+
     input   wire [2:0] tritshift_tritwise_t2, //trit shifts up to 3 front and back
 
     input   wire cmd_ready_t2,

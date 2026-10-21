@@ -5,12 +5,20 @@ module thread_command(
 
 
     //from the microcode parsers
+        output wire [7:0] macro_op,
+        output wire [7:0] action_counter,
+        output wire [7:0] param_counter,
         input wire [3:0] command,
         input wire [3:0] param_0,
         input wire [3:0] param_1,
         input wire [3:0] param_2,
         output reg  command_req_new,
         input  wire command_data_sent,
+        output wire flush,
+
+        // input [6:0] microcode_action_offset_t0, //up to 128 but since its 4 trit to convert to this it's more like 81
+        //input [6:0] microcode_param_offset_t0,
+        //.flush(),//this forces the microcode handler to pause, flush cache and read from action position & param position, as well as macro op position
         // output wire ,
     //secondary register
         input wire  [23:0] trit_in_from_2nd_reg,

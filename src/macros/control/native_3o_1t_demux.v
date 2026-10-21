@@ -11,7 +11,7 @@ module native_3o_1t_demux (
     inout trit_out_0,
     inout trit_out_1,
     inout trit_out_2,
-    inout trit_in,
+    inout trit_in
 );
     // EMPTY: No logic here. 
     // OpenLane will route wires to these pins based on the bounding box in your LEF.
