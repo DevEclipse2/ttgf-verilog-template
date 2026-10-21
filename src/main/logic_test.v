@@ -36,6 +36,7 @@ wire decode_0111_a_error;//adder
 wire decode_0111_b_error;
 wire decode_0111_c_error;
 always @(*) begin
+    if(ui_in[2:0] == 3'b000)begin
     case(ui_in[7:3])
         4'b0000: begin
             uo_out[1:0] = passthrough_binary_result;
@@ -96,6 +97,7 @@ always @(*) begin
             uo_out[7]   = decode_1010_error;
         end
     endcase
+    end
 end 
 //passthrough
     wire passthrough_ternary_wire;

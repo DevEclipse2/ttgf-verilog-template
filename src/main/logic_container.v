@@ -13,6 +13,9 @@ module logic_container(
     input  wire [7:0] uio_in,   // IOs: Input path (Pins 8-15)
     output wire [7:0] uio_out,  // IOs: Output path (Pins 8-15)
     output wire [7:0] uio_oe   // IOs: Enable path (active high: 1=drive, 0=high-Z)
+
+    input wire active, //this is more of a suggestion but it severely restricts what the cores can do
+    //housekeeping duties basically
 );
 
 
