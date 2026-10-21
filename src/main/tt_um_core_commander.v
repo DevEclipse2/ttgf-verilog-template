@@ -83,9 +83,12 @@ module tt_um_core_commander (
     reg [2:0] microcode_fence;
     reg [2:0] direct_instruction;
 
-    assign o_microcode_fence_t0 = microcode_fence[0];
-    assign o_microcode_fence_t1 = microcode_fence[1];
-    assign o_microcode_fence_t2 = microcode_fence[2];
+    // When the bus is active (not idle), lock down ALL threads
+    wire bus_active = (controller_state != state_idle);
+
+    assign o_microcode_fence_t0 = microcode_fence[0] | bus_active;
+    assign o_microcode_fence_t1 = microcode_fence[1] | bus_active;
+    assign o_microcode_fence_t2 = microcode_fence[2] | bus_active;
 
     assign o_direct_instr_t0    = direct_instruction[0];
     assign o_direct_instr_t1    = direct_instruction[1];
@@ -101,6 +104,7 @@ module tt_um_core_commander (
     reg [7:0] err_uop_prm_ovf_t [0:2]; // ID 3'd4
     reg [7:0] err_reg_ovf_t     [0:2]; // ID 3'd5
 
+    //these are asynchronously assigned
     reg [2:0] prev_b2t_err;
     reg [2:0] prev_ucode_err;
     reg [2:0] prev_pc_ovf_err;
@@ -108,7 +112,7 @@ module tt_um_core_commander (
     reg [2:0] prev_uop_prm_err;
     reg [2:0] prev_reg_ovf_err;
 
-    reg       new_error_flag;
+    reg       new_error_flag;     //this one has a reset command
     reg [1:0] offending_thread;   // Shown on uo_out[4:3] when new_error_flag == 1
     reg [2:0] offending_error_id; // Shown on uo_out[2:0] when new_error_flag == 1
 
@@ -120,6 +124,7 @@ module tt_um_core_commander (
     // -------------------------------------------------------------------------
     wire [1:0] show_tracker_id = showing_errors ? thread_select : 2'b11;
 
+    //handles showing priority
     always @(*) begin
         case (show_tracker_id)
             2'b00: begin
@@ -158,7 +163,7 @@ module tt_um_core_commander (
                     default: tracker = 8'h00;
                 endcase
             end
-            default: begin // 2'b11: Off
+            default: begin // 2'b11: Off state
                 show_tracker = 1'b0;
                 tracker      = 8'h00;
             end
