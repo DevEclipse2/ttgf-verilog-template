@@ -1,18 +1,20 @@
 (* blackbox *)
 module native_8t_flags_4t_pc (
     // Power & Mid-Rail
-    inout VDD_3V3,
-    inout VDD_1V65,
+    `ifdef USE_POWER_PINS
+    inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD
     inout VSS,
+    `endif
+    inout VDD_1V65,
     
-    input reg r_enable,
-    input reg w_enable,
-    input reg [3:0] position,
+    input r_enable,
+    input w_enable,
+    input [3:0] position,
     // 0000 for 12T
     // 0001 for 4t at position 0
     // 0010 for 4t at position 1
     // 0011 for 4t at position 2
-    // 1xxx for 8 trit flags
+    // 1xxx for 8 1-trit flags
 
     inout [11:0] data_in_12T,
     inout [3:0]  data_in_4T,

@@ -65,6 +65,28 @@ module tt_um_triple_t_devEclipse2 (
     wire       is_read_wire;
     wire [2:0] reg_handover_done_wire; //remember on thread side when it stops reading this thread it resets
 
+    wire o_microcode_fence_t0_wire;
+    wire o_microcode_fence_t1_wire;
+    wire o_microcode_fence_t2_wire;
+
+    wire o_direct_instr_t0_wire;
+    wire o_direct_instr_t1_wire;
+    wire o_direct_instr_t2_wire;
+    wire single_execute_t0_wire;
+    wire single_execute_t1_wire;
+    wire single_execute_t2_wire;
+    wire single_execute_ack_t0_wire;
+    wire single_execute_ack_t1_wire;
+    wire single_execute_ack_t2_wire;
+
+    wire cmd_buf_clr_t0_wire;
+    wire cmd_buf_clr_t1_wire;
+    wire cmd_buf_clr_t2_wire;
+
+    wire cmd_buf_clr_ack_t0_wire;
+    wire cmd_buf_clr_ack_t1_wire;
+    wire cmd_buf_clr_ack_t2_wire;
+
     tt_um_core_commander core_commander (
         .clk                    (clk),
         .rst_n                  (rst_n),
@@ -99,46 +121,27 @@ module tt_um_triple_t_devEclipse2 (
         // -------------------------------------------------------------------------
         // Per-Thread Execution Control & Handshakes (Threads 0, 1, 2)
         // -------------------------------------------------------------------------
-        output wire       o_microcode_fence_t0,
-        output wire       o_microcode_fence_t1,
-        output wire       o_microcode_fence_t2,
+        .o_microcode_fence_t0(o_microcode_fence_t0_wire),
+        .o_microcode_fence_t1(o_microcode_fence_t1_wire),
+        .o_microcode_fence_t2(o_microcode_fence_t2_wire),
 
-        output wire       o_direct_instr_t0,
-        output wire       o_direct_instr_t1,
-        output wire       o_direct_instr_t2,
+        .o_direct_instr_t0(o_direct_instr_t0_wire),
+        .o_direct_instr_t1(o_direct_instr_t1_wire),
+        .o_direct_instr_t2(o_direct_instr_t2_wire),
 
-        output reg        single_execute_t0,
-        output reg        single_execute_t1,
-        output reg        single_execute_t2,
-        input  wire       single_execute_ack_t0,
-        input  wire       single_execute_ack_t1,
-        input  wire       single_execute_ack_t2,
+        .single_execute_t0(single_execute_t0_wire),
+        .single_execute_t1(single_execute_t1_wire),
+        .single_execute_t2(single_execute_t2_wire),
+        .single_execute_ack_t0(single_execute_ack_t0_wire),
+        .single_execute_ack_t1(single_execute_ack_t1_wire),
+        .single_execute_ack_t2(single_execute_ack_t2_wire),
 
-        output reg        cmd_buf_clr_t0,
-        output reg        cmd_buf_clr_t1,
-        output reg        cmd_buf_clr_t2,
-        input  wire       cmd_buf_clr_ack_t0,
-        input  wire       cmd_buf_clr_ack_t1,
-        input  wire       cmd_buf_clr_ack_t2
-    );
-    tt_um_core_commander commander_inst (
-        
-        
-        // Inputs from Core
-        .b2t_translation_err    (b2t_translation_err),
-        .microcode_miss         (microcode_miss),
-        .single_execute_ack     (single_execute_ack),
-        
-        // Internal Controller Outputs
-        .o_microcode_fence      (o_microcode_fence),
-        .o_direct_instruction   (o_direct_instruction),
-        .show_tracker           (show_tracker),
-        .register_read_stage    (register_read_stage),
-        .register_read_id       (register_read_id),
-        .is_read                (is_read),
-        .single_execute         (single_execute),
-        .soft_reset             (soft_reset),
-        .thread_select          (thread_select)
+        .cmd_buf_clr_t0(cmd_buf_clr_t0_wire),
+        .cmd_buf_clr_t1(cmd_buf_clr_t1_wire),
+        .cmd_buf_clr_t2(cmd_buf_clr_t2_wire),
+        .cmd_buf_clr_ack_t0(cmd_buf_clr_ack_t0_wire),
+        .cmd_buf_clr_ack_t1(cmd_buf_clr_ack_t1_wire),
+        .cmd_buf_clr_ack_t2(cmd_buf_clr_ack_t2_wire)
     );
     
     //multiplexer

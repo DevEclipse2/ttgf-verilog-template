@@ -12,9 +12,9 @@ module logic_container(
     output wire [7:0] uo_out,   // Dedicated outputs (Pins 16-23)
     input  wire [7:0] uio_in,   // IOs: Input path (Pins 8-15)
     output wire [7:0] uio_out,  // IOs: Output path (Pins 8-15)
-    output wire [7:0] uio_oe   // IOs: Enable path (active high: 1=drive, 0=high-Z)
+    output wire [7:0] uio_oe,   // IOs: Enable path (active high: 1=drive, 0=high-Z)
 
-    input wire active, //this is more of a suggestion but it severely restricts what the cores can do
+    input wire active //this is more of a suggestion but it severely restricts what the cores can do
     //housekeeping duties basically
 );
 
@@ -290,7 +290,7 @@ ternary_to_unsigned_binary_logic_convert_4t t2ubActr_t0(
     .in_trits(action_ctr_wire_t0),
     out_bin(converted_action_t0),
 );
-ternary_to_unsigned_binary_logic_convert_4t t2ubActr_t0(
+ternary_to_unsigned_binary_logic_convert_4t t2ubPctr_t0(
     .in_trits(param_ctr_wire_t0),
     out_bin(converted_param_t0),
 );

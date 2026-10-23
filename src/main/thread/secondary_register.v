@@ -16,8 +16,9 @@ module secondary_register (
     //dock at 0 to signify its done, dock at any other invalid address to signify problem
 
     input  wire [23:0] binary_trit_in,
-    input  wire [3:0]  commandpipe_address,
-    input  wire        command_write_enable
+    input  wire [2:0]  commandpipe_address,
+    input  wire        command_write_enable,
+    output wire        pc_overflow
 );
 
     //parameter registers
@@ -63,7 +64,7 @@ module secondary_register (
     .r_enable(pc_r_enable),    // High to drive PC onto r_data bus
     .w_data(trit_in),      // 12-trit (24-bit) branch target input
     .r_data(pc_r_data),      // 12-trit (24-bit) gated read output
-    .overflow()     // Pulses high when wrapping from all +1s to all -1s
+    .overflow(pc_overflow)     // Pulses high when wrapping from all +1s to all -1s
     );
     reg fetch_state_active;
 
@@ -115,22 +116,22 @@ module secondary_register (
                 if (sel_cmd1 == 1'b0) begin
                     // Main thread is using cmd0, so pipe loads cmd1
                     case (commandpipe_address)
-                        4'd9: cmd1_reg_0 <= binary_trit_in;
-                        4'd10: cmd1_reg_1 <= binary_trit_in;
-                        4'd11: cmd1_reg_2 <= binary_trit_in;
-                        4'd12: cmd1_reg_3 <= binary_trit_in;
-                        4'd13: cmd1_reg_4 <= binary_trit_in;
-                        4'd14: cmd1_reg_5 <= binary_trit_in;
+                        3'b001: cmd1_reg_0 <= binary_trit_in;
+                        3'b010: cmd1_reg_1 <= binary_trit_in;
+                        3'b011: cmd1_reg_2 <= binary_trit_in;
+                        3'b100: cmd1_reg_3 <= binary_trit_in;
+                        3'b101: cmd1_reg_4 <= binary_trit_in;
+                        3'b110: cmd1_reg_5 <= binary_trit_in;
                     endcase
                 end else begin
                     // Main thread is using cmd1, so pipe loads cmd0
                     case (commandpipe_address)
-                        4'd9: cmd0_reg_0 <= binary_trit_in;
-                        4'd10: cmd0_reg_1 <= binary_trit_in;
-                        4'd11: cmd0_reg_2 <= binary_trit_in;
-                        4'd12: cmd0_reg_3 <= binary_trit_in;
-                        4'd13: cmd0_reg_4 <= binary_trit_in;
-                        4'd14: cmd0_reg_5 <= binary_trit_in;
+                        3'b001: cmd0_reg_0 <= binary_trit_in;
+                        3'b010: cmd0_reg_1 <= binary_trit_in;
+                        3'b011: cmd0_reg_2 <= binary_trit_in;
+                        3'b100: cmd0_reg_3 <= binary_trit_in;
+                        3'b101: cmd0_reg_4 <= binary_trit_in;
+                        3'b110: cmd0_reg_5 <= binary_trit_in;
                     endcase
                 end
             end
