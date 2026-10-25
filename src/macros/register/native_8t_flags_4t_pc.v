@@ -22,18 +22,7 @@ module native_8t_flags_4t_pc (
 
     inout [11:0] data_out_12T,
     inout [3:0]  data_out_4T,
-    inout data_out_1T,
-
-    // // Ternary Inputs (4 trits each)
-    // inout [3:0] trit_in_a,
-    // inout [3:0] trit_in_b,
-    
-    // // Ternary Carry
-    // inout trit_carry_in,
-    // inout trit_carry_out,
-    
-    // // Ternary Output
-    // inout [3:0] trit_out
+    inout data_out_1T
 );
 
 //the blackbox macro for the 8 trit flags and the micro op action count
