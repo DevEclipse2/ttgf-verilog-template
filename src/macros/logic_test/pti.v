@@ -5,8 +5,6 @@ module nti (
     inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD
     inout VSS,
     `endif
-    inout VDD_1V65,
-    
     inout ternary_input,
     inout ternary_result
 );

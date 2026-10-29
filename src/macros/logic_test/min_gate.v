@@ -1,5 +1,5 @@
 (* blackbox *)
-module max_gate (
+module min_gate (
     // Power & Mid-Rail
     `ifdef USE_POWER_PINS
     inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD

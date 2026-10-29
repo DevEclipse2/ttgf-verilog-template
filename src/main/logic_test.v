@@ -128,7 +128,6 @@ end
     );
     nti nti_module
     (
-        .VDD_1V65(VDD_1V65),
         .ternary_input(nti_ternary_wire),
         .ternary_result(nti_res_ternary_wire)
     );
@@ -144,7 +143,6 @@ end
     wire [1:0] pti_binary_result;
     native_b2t_secure pti_b2t
     (
-        .VDD_1V65(VDD_1V65),
         .binary_input(uio_in[1:0]),
         .ternary_result(pti_ternary_wire),
         .decode_error(decode_0010_error)

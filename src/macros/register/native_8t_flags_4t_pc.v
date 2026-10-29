@@ -9,6 +9,7 @@ module native_8t_flags_4t_pc (
     
     input r_enable,
     input w_enable,
+    input full12t,
     input [3:0] position,
     // 0000 for 12T
     // 0001 for 4t at position 0
