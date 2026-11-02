@@ -1,9 +1,11 @@
 (* blackbox *)
 module native_3i_9t_mux (
     // Power & Mid-Rail
-    inout VDD_3V3,
-    inout VDD_1V65,
+    `ifdef USE_POWER_PINS
+    inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD
     inout VSS,
+    `endif
+    inout VDD_1V65,
     
     inout mux_line0, //flex that 3 level logic while you still can
     inout mux_line1,

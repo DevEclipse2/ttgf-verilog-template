@@ -444,8 +444,6 @@ native_full_adder_4t ternary_tritshift (
 
 native_shift_selector ternary_shiftselector (
 
-     
-    
     .VDD_1V65(VDD_1V65),
     
     .selector(select_result), // -1 is left, 0 is center , 1 is right 

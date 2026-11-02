@@ -1,5 +1,5 @@
 (* blackbox *)
-module native_4t4t4t (
+module native_12t_ladder (
     // Power & Mid-Rail
     `ifdef USE_POWER_PINS
     inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD
@@ -17,7 +17,7 @@ module native_4t4t4t (
     // 10 for 4t at position 2
     // 11 as do nothing state
     inout [11:0] data_in_12T,
-    inout [7:0]  date_in_8T,
+    inout [7:0]  data_in_8T,
     inout [3:0]  data_in_4T,
     inout [11:0] data_out_12T,
     inout [3:0]  data_out_4T

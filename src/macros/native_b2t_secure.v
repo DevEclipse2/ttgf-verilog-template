@@ -7,9 +7,10 @@ module native_b2t_secure (
     `endif
     inout VDD_1V65,
     
-    inout [1:0] binary_input,
+    input B_in_0,
+    input B_in_1,
     inout ternary_result,
-    inout decode_error
+    output decode_error
 
 );
     // EMPTY: No logic here. 

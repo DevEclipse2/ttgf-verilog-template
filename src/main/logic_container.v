@@ -14,8 +14,7 @@ module logic_container(
     output wire [7:0] uio_out,  // IOs: Output path (Pins 8-15)
     output wire [7:0] uio_oe,   // IOs: Enable path (active high: 1=drive, 0=high-Z)
 
-    input wire active //this is more of a suggestion but it severely restricts what the cores can do
-    //housekeeping duties basically
+    
 );
 
 
@@ -213,27 +212,6 @@ microcode microcode_parser
     wire micro_sent_wire_t0;
     wire micro_flush_wire_t0;
 
-//each thread
-secondary_register thread0_2nd_reg (
-
-    .clk(clk),
-    .rst_n(rst_n),
-    .trit_out(register_from_reg_t0),
-    .trit_in(register_to_reg_t0),
-    .r_enable(r_en_t0),
-    .w_enable(w_en_t0),
-    .pc_increment(pc_increment_t0),
-    .t_addr_in(trit_address_reg_t0), //thread address
-    .sel_cmd1(select_cmd_t0),
-
-    //2 spots, one from the alu and the thread manager to read and write, and another for the commandpipe feed
-    // 6 per command, 
-    //dock at 0 to signify its done, dock at any other invalid address to signify problem
-
-    .binary_trit_in(command_pipe_in_t0),
-    .commandpipe_address(commandpipe_address_t0),
-    .command_write_enable(write_enable)
-);
 thread_command thread0_command(
     
     .clk(clk),

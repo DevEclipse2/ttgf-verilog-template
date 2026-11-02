@@ -7,6 +7,7 @@ module native_3i_8t_mux (
     inout VSS,
     `endif
     inout VDD_1V65,
+
     inout mux_line0, //flex that 3 level logic while you still can
     inout mux_line1,
     // Ternary Inputs (4 trits each)

@@ -380,7 +380,7 @@ module tt_um_core_commander (
                                 if (reg_handover_done[thread_select]) begin
                                     // Active thread signaled all register bytes are handed over
                                     bus_ready           <= 1'b0;
-                                    register_address    <= 5'd0;
+                                    register_address    <= 5'd1;
                                     register_read_stage <= 2'b00;
                                     controller_state    <= state_idle;
                                 end else if (fpga_ack) begin
