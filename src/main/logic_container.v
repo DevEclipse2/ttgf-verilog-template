@@ -1,5 +1,14 @@
 //the logic container is in charge of housing the 3 threads and 1 core plus controller
 //the overlord is a separate spectator
+/*
+for the logic container it is in charge of handling command streaming into the things, 
+can also do memory read and writes through the io for all 3 threads, as well as handling the changes between microcode, thread command intake and stuff
+
+
+
+*/
+
+
 
 //also logic testing etc is done somewhere else, preferably somewhere that i can't see
 module logic_container(
@@ -187,6 +196,23 @@ microcode microcode_parser
         output  cycle_threads,
         output  microcode_idle,
 );
+
+    always @(*) begin
+        case (ui_in[2:0])
+            3'b010: begin
+                //thread -1 addressing 
+            end
+            3'b011: begin
+                //thread 0 addressing 
+            end
+            3'b100: begin
+                //thread 1 addressing 
+            end
+            3'b101: begin
+                //microcode addressing
+            end
+        endcase
+    end
 
 //thread 0 interconnects 
     wire [23:0] register_from_reg_t0;

@@ -1,4 +1,14 @@
 //the primary commander for the thread responsible for decoding operations 
+/*
+todo: add error and overflow warns outwards
+
+*/
+
+
+
+
+
+
 module thread_command(
     input wire clk,
     input wire rst_n,
@@ -174,9 +184,27 @@ reg [1:0] execute_stage;
 reg can_execute_this_clock = 1'b1;
 
 //conversion 
+reg [1:0] flag_reg_bin_b2t_1t;
+wire      flag_reg_ter_b2t_1t;
+wire      flag_reg_error_1t;
+
+
+reg [1:0] carry_bin_b2t_1t;
+wire      carry_ter_b2t_1t;
+wire      carry_reg_error_1t;
+
+
 reg     [7:0] flag_reg_bin_b2t_4t;
 wire    [3:0] flag_reg_ter_b2t_4t;
 wire    flag_reg_b2t_error_4t;
+
+reg     [7:0] sp0_reg_bin_b2t_4t;
+wire    [3:0] sp0_reg_ter_b2t_4t;
+wire    sp0_reg_b2t_error_4t;
+
+reg     [7:0] sp1_reg_bin_b2t_4t;
+wire    [3:0] sp1_reg_ter_b2t_4t;
+wire    sp1_reg_b2t_error_4t;
 
 reg     [23:0] flag_reg_bin_b2t;
 wire    [11:0] flag_reg_ter_b2t;
@@ -189,12 +217,42 @@ wire    sp0_reg_b2t_error;
 reg     [23:0] sp1_reg_bin_b2t;
 wire    [11:0] sp1_reg_ter_b2t;
 wire    sp1_reg_b2t_error;
+
+
+reg     [23:0] ladd_reg_bin_b2t;
+wire    [11:0] ladd_reg_ter_b2t;
+wire    ladd_reg_b2t_error;
+
 //conversion binds
 
+assign flag_din_1T = flag_reg_ter_b2t_1t;
+assign c_trit_din = carry_ter_b2t_1t;
+
 assign flag_din_4T = flag_reg_ter_b2t_4t;
+assign sp0_din_4T = sp0_reg_ter_b2t;
+assign sp1_din_4T = sp1_reg_ter_b2t;
+
+
 assign flag_din_12T = flag_reg_ter_b2t;
 assign sp0_din_12T = sp0_reg_ter_b2t;
 assign sp1_din_12T = sp1_reg_ter_b2t;
+assign ladder_din_12T = ladd_reg_ter_b2t;
+
+reg [23:0] debug_reg_cache;
+
+
+
+//operation parameters and states for the main loop
+reg write_allow = 1'b1;
+
+reg single_m_12t = 1'b0;
+reg single_m_4t = 1'b0;
+reg single_m_1t = 1'b0;
+
+
+
+
+
 
 always @(posedge clk or negedge rst_n) begin
     //this is the main loop of the system
@@ -267,6 +325,8 @@ always @(posedge clk or negedge rst_n) begin
             flag_re             <= 1'b0;
             flag_we             <= 1'b0;
             can_execute_this_clock <= 1'b0;
+            ladder_full12t       <= 1'b0;
+
 
             /*
             load new commands, while the rest of the thread either does housekeeping or something else
@@ -295,51 +355,66 @@ always @(posedge clk or negedge rst_n) begin
 
         */
 
-        if(cmd_buf_clr) begin
-            //this wipes the macro ops and puts the bus at empty
-            threadstate = THREAD_EMPTY;
-            macroop_register <= 16'b0;
-            using_macroop_1 <= 1'b0;
-            //this does not touch existing registers to allow us to do weird stuff
-            p_pc_we = 1'b1;
-            p_pc_wdata = 8'b00000000;
-            flag_we = 1'b1;
-            flag_pos = 4'b0011;
-            flag_reg_bin_b2t_4t = 8'b00000000;
-            cmd_buf_clr_ack <= 1'b1;
-        end
-        else begin
-            if(register_address != 5'd0) begin
-                //valid read address
-                // if its 5 its the program counter
-                //anything else goes like normal
-                //triple read stages
-
+        //this block executes beforehand to do... something    
+            if(cmd_buf_clr) begin
+                //this wipes the macro ops and puts the bus at empty
+                threadstate = THREAD_EMPTY;
+                macroop_register <= 16'b0;
+                using_macroop_1 <= 1'b0;
+                //this does not touch existing registers to allow us to do weird stuff
+                p_pc_we = 1'b1;
+                p_pc_wdata = 8'b00000000;
+                flag_we = 1'b1;
+                flag_pos = 4'b0011;
+                flag_reg_bin_b2t_4t = 8'b00000000;
+                cmd_buf_clr_ack <= 1'b1;
             end
             else begin
-                //if theres a fence
-                if(microcode_fence) begin
-                    //if theres a single execute 
-                    //handshake
-                    if(single_execute ) begin    
-                        if(!single_execute_ack) begin
-                            single_execute_ack <= 1'b1;
-                            //we can execute normally for 1 micro op
-                            can_execute_this_clock = 1'b1;
-                            //do something here
+                if(register_address != 5'd0) begin
+                    //valid read address
+                    // if its 5 its the program counter
+                    //anything else goes like normal
+                    //triple read stages
+                    //
+                    if(register_address < 4'15) begin
+                        debug_reg_cache = reg_data_from;
+                        reg_r_en = 1'b1;
+                        reg_addr = 5'd5;
+                    end else begin
+                        //read native and microcode actions and stuff
+                        //unfinished!
+                    end
+                    case(register_read_stage) 
+                        2'b01: dbg_dout = debug_reg_cache[7:0];
+                        2'b10: dbg_dout = debug_reg_cache[15:8];
+                        2'b11: dbg_dout = debug_reg_cache[23:16];
+                    endcase
+                end
+                else begin
+                    //if theres a fence
+                    if(microcode_fence) begin
+                        //if theres a single execute 
+                        //handshake
+                        if(single_execute ) begin    
+                            if(!single_execute_ack) begin
+                                single_execute_ack <= 1'b1;
+                                //we can execute normally for 1 micro op
+                                can_execute_this_clock = 1'b1;
+                                //do something here
+                            end
+                        end else begin
+                            single_execute_ack <= 1'b0;
                         end
                     end else begin
-                        single_execute_ack <= 1'b0;
+                        //no fence or anything 
+                        //act normal
+                        can_execute_this_clock = 1'b1;
                     end
-                end else begin
-                    //no fence or anything 
-                    //act normal
-                    can_execute_this_clock = 1'b1;
                 end
             end
-        end
 
-        if(can_execute_this_clock) begin //like the core is allowed to do anything at all this needs to be 1
+
+        if(can_execute_this_clock) begin //for the core is allowed to do anything at all this needs to be 1
             if(direct_instr) begin
                 //this bypasses the usual things, locking it to only operate at command 1
                 //this also shuts down the ability for microcode to request more commands, potentially breaking some things
@@ -359,6 +434,8 @@ always @(posedge clk or negedge rst_n) begin
                     flag_reg_bin_b2t_4t = 8'b00000000;
                     //yes it is intentional that we can override it later
 
+
+                    //remind me to move this to a seperate func
                     //housekeeping section ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     //best clock for housekeeping btw
                     //make sure that the aliased buffers that write into the command parameter addresses are written into the new command parameter space
@@ -370,34 +447,33 @@ always @(posedge clk or negedge rst_n) begin
                         reg_w_en = 1'b1; // pull this to high for a single clock
                         override_cmd_sel_en = 1'b1; //1 clock
                         override_cmd_sel <= ~using_macroop_1;
-                        end else begin
+                        end 
+                        else begin
                             case(alias_addr_12t)
                                 4'd1: begin
-                                    //scratchpad
+                                    //scratchpad 0
                                     //fill scratchpad 
                                     sp0_full12t = 1'b1;
                                     sp0_we = 1'b1;
-                                     = am_buff_12t;
+                                    sp0_reg_bin_b2t = am_buff_12t;
                                 end
                                 4'd2: begin
-                                    //scratchpad
-                                    //fill scratchpad 
+                                    //scratchpad 1
                                     sp1_full12t = 1'b1;
                                     sp1_we = 1'b1;
-                                     = am_buff_12t;
+                                    sp1_reg_bin_b2t = am_buff_12t;
                                 end
                                 4'd3: begin
-                                    //scratchpad
-                                    //fill scratchpad 
+                                    //flags 
                                     flag_full12t = 1'b1;
                                     flag_we = 1'b1;
-                                     = am_buff_12t;
+                                    flag_reg_bin_b2t = am_buff_12t;
                                 end
                                 4'd4: begin
                                     //ladder register
                                     ladder_full12t = 1'b1;
                                     ladder_we = 1'b1;
-                                     = am_buff_12t;
+                                    ladd_reg_bin_b2t = am_buff_12t;
                                 end
                             endcase
                         end
@@ -407,27 +483,21 @@ always @(posedge clk or negedge rst_n) begin
                     if(alias_active_4t) begin
                         alias_active_4t <= 1'b0;
                         //4t write
-                        if(alias_addr_4t < 3'd2) begin
+                        if(alias_addr_4t <= 3'd2) begin
                             // 0-2
                             //scratchpad 0
-                            sp0_din_4T = am_buff_4t;
+                            sp0_reg_bin_b2t = am_buff_4t;
                             sp0_we = 1'b1;
-                        end else if (alias_addr_4t < 3'd5) begin
+                        end else if (alias_addr_4t <= 3'd5) begin
                             //3-5
                             //scratchpad 1
-                            sp1_din_4T = am_buff_4t;
+                            sp1_reg_bin_b2t = am_buff_4t;
                             sp1_we = 1'b1;
                         end
-                        else if (alias_addr_4t == 3'd6) begin
-                            //action    micrcode is at 6
-                            //action is stored in the 12T registers
+                        else begin
+                            //flag register sections
                             flag_we = 1'b1;
-                            flag_din_4T = am_buff_4t;
-                        end
-                        else if (alias_addr_4t == 3'd7) begin
-                            //parameter micrcode is at 7
-                            p_pc_we = 1'b1;
-                            p_pc_wdata = am_buff_4t;
+                            flag_reg_bin_b2t = am_buff_4t;
                         end
                         case(alias_addr_4t)
                             3'd0: sp0_pos  = 2'b01;
@@ -436,107 +506,27 @@ always @(posedge clk or negedge rst_n) begin
                             3'd3: sp1_pos  = 2'b01;
                             3'd4: sp1_pos  = 2'b10;
                             3'd5: sp1_pos  = 2'b11;
-                            3'd6: flag_pos = 4'b0011;
+                            3'd6: flag_pos = 4'b0001;
+                            3'd7: flag_pos = 4'b0010;
                         endcase
                     end
                     if(alias_active_1t) begin
                         alias_active_1t <= 1'b0;
                         //1t write
-                        flag_din_1T = am_buff_1t;
+                        flag_reg_bin_b2t_1t = am_buff_1t;
                         flag_pos[3] = 1'b1;
                         flag_pos[2:0] = alias_active_1t;
                         flag_we = 1'b1;
                     end
+                    //end of housekeeping
                 end
                 else begin
                     //either idling or working
                     if(threadstate == THREAD_EMPTY) begin
                         //literally idle
                         pipe_empty = 1'b1;
-                        //housekeeping
-                        if(alias_addr_12t != 4'b0000) begin
-                            alias_addr_12t <= 4'b0000;
-                            if(alias_addr_12t >= 4'd5) begin
-                            reg_data_to = am_buff_12t;
-                            reg_w_en = 1'b1; // pull this to high for a single clock
-                            override_cmd_sel_en = 1'b1; //1 clock
-                            override_cmd_sel <= ~using_macroop_1;
-                            end else begin
-                                case(alias_addr_12t)
-                                    4'd1: begin
-                                        //scratchpad
-                                        //fill scratchpad 
-                                        sp0_full12t = 1'b1;
-                                        sp0_we = 1'b1;
-                                        sp0_din_12T = am_buff_12t;
-                                    end
-                                    4'd2: begin
-                                        //scratchpad
-                                        //fill scratchpad 
-                                        sp0_full12t = 1'b1;
-                                        sp0_we = 1'b1;
-                                        sp0_din_12T = am_buff_12t;
-                                    end
-                                    4'd3: begin
-                                        //scratchpad
-                                        //fill scratchpad 
-                                        flag_full12t = 1'b1;
-                                        flag_we = 1'b1;
-                                        flag_din_12T = am_buff_12t;
-                                    end
-                                    4'd4: begin
-                                        //ladder register
-                                        ladder_full12t = 1'b1;
-                                        ladder_we = 1'b1;
-                                        ladder_full12t = am_buff_12t;
-                                    end
-                                endcase
-                            end
-                            //also check if this falls into the scratchpad registers /flag registers cause they are different
-                        end
-                        if(alias_active_4t) begin
-                            //4t write
-                            alias_active_4t <= 1'b0;
-                            if(alias_addr_4t < 3'd2) begin
-                                // 0-2
-                                //scratchpad 0
-                                sp0_din_4T = am_buff_4t;
-                                sp0_we = 1'b1;
-                            end else if (alias_addr_4t < 3'd5) begin
-                                //3-5
-                                //scratchpad 1
-                                sp1_din_4T = am_buff_4t;
-                                sp1_we = 1'b1;
-                            end
-                            else if (alias_addr_4t == 3'd6) begin
-                                //action    micrcode is at 6
-                                //action is stored in the 12T registers
-                                flag_we = 1'b1;
-                                flag_din_4T = am_buff_4t;
-                            end
-                            else if (alias_addr_4t == 3'd7) begin
-                                //parameter micrcode is at 7
-                                p_pc_we = 1'b1;
-                                p_pc_wdata = am_buff_4t;
-                            end
-                            case(alias_addr_4t)
-                                3'd0: sp0_pos  = 2'b01;
-                                3'd1: sp0_pos  = 2'b10;
-                                3'd2: sp0_pos  = 2'b11;
-                                3'd3: sp1_pos  = 2'b01;
-                                3'd4: sp1_pos  = 2'b10;
-                                3'd5: sp1_pos  = 2'b11;
-                                3'd6: flag_pos = 4'b0011;
-                            endcase
-                        end
-                        if(alias_active_1t) begin
-                            //1t write
-                            alias_active_1t <= 1'b0;
-                            flag_din_1T = am_buff_1t;
-                            flag_pos[3] = 1'b1;
-                            flag_pos[2:0] = alias_active_1t;
-                            flag_we = 1'b1;
-                        end
+                        //do housekeeping here
+                        //twiddle thumbs or something idk
                     end
                     else begin
                         //working hard or hardly working?
@@ -546,65 +536,72 @@ always @(posedge clk or negedge rst_n) begin
                         //if no micro op or no alu, do nothing
 
                         //check if the logic leading up to micro op handling is sound
-                        if(execute_done) begin
+                        if(execute_done) begin // execute done refers to the micro instruction
                             //request new from microcode
+                            //if there was a jump previously, use a flush and make sure action counter and param counter are visible
+                            // then command_req_new is inverted to show new request
+                            command_req_new = ~command_req_new;
+
                         end else if(command_data_sent && execute_stage == 2'b0) begin
                             //read command input 
                             execute_done = 1'b0;
-                            command_req_new = 1'b0;
                             
-
-                            //complete these for me
-                            //for commands that require conversion of immediates, use 
-                            /*
-                            module native_b2t_secure (
-                            // Power & Mid-Rail
-                            `ifdef USE_POWER_PINS
-                            inout VDD_3V3,  // Hidden from Yosys, used by OpenROAD
-                            inout VSS,
-                            `endif
-                            inout VDD_1V65,
                             
-                            inout [1:0] binary_input,
-                            inout ternary_result,
-                            inout decode_error
-                            );*/
-
                             if(command == 4'b0000) begin
                                 // 0 parameters
                                 case(param_0)
                                     4'b0001: begin
                                         //mac ladder flush
+                                        ladder_full12t = 1'b1;
+                                        ladder_we = 1'b1;
+                                        ladd_reg_bin_b2t = 24'd0;
                                     end
                                     4'b0010: begin
                                         //clear carry
+                                        c_trit_we = 1'b1;
+                                        carry_bin_b2t_1t = 2'b00;
                                     end
                                     4'b0011: begin
                                         //reset mask/alias
+                                        am_buff_12t = 24'd0;
+                                        am_buff_4t = 7'd0;
+                                        am_buff_1t = 2'd0;
+                                        alias_active_1t = 1'b0;
+                                        alias_active_4t = 1'b0;
+                                        alias_addr_12t = 4'd0;
                                     end
                                     4'b0100: begin
                                         //return
                                     end
                                     4'b0101: begin
                                         //disable write
+                                        write_allow = 1'b0;
                                     end
                                     4'b0110: begin
                                         //enable write
+                                        write_allow = 1'b1; //do not clear
                                     end
                                     4'b0111: begin
                                         //clear scratchpads
                                     end
                                     4'b1000: begin
-                                        //clear gps
+                                        //clear general purpose registers
                                     end
                                     4'b1001: begin
                                         //stall until next macro command is in
                                     end
                                     4'b1010: begin
                                         //alu priority step up, housekeep
+                                        //this needs to be implemented on all sides
                                     end
                                     4'b1011: begin
                                         //program counter increment
+                                    end
+                                    4'b1100: begin
+                                        //clear mac offset
+                                    end
+                                    4'b1101: begin
+                                        //mac offset++
                                     end
                                 endcase
                             end else if(command == 4'b0001) begin 
@@ -612,17 +609,25 @@ always @(posedge clk or negedge rst_n) begin
                                 case(param_0)
                                     4'b0001: begin
                                         //mac ladder set overflow target (12 trits)
+                                        // internal complex method of handling the overflow
+                                        /*
+                                        if the 12 trits are not scratchpad, they are copied out first, then that section is replaced with the mac overflow and rewritten
+                                        */
                                     end
                                     4'b0010: begin
                                         //mac ladder pump, 4 trit chunk source address 
                                         // Xxx0: fill normally
                                         // Xxx1: fill with 0s
+                                        //mac pumps do not shift the destination register trits, 
+                                        //instead a counter keeps track of where each segment should go and overwrite that segment 
+                                        //based off of the mac counter
                                     end
                                     4'b0011: begin
                                         //clear 4 trits of scratch/mac
                                         //4 trit chunk address
                                         // Xxx0: clear scratchpads
                                         // Xxx1: clear mac ladder section
+                                        
                                     end
                                     4'b0100: begin
                                         //hold until register change
@@ -630,29 +635,44 @@ always @(posedge clk or negedge rst_n) begin
                                         //12t register address
                                     end
                                     4'b0101: begin
-                                        //set single use mask
+                                        //set single use mask for 12 trits
+                                        //the value at that 12t address will be copied into the mask buffer
                                     end
                                     4'b0110: begin
-                                        //mask will not clear automatically
+                                        //mask will not clear automatically for 12 trits
+                                        //the value at that 12t address will be copied into the mask buffer
                                     end
                                     4'b0111: begin
                                         //4t mask
-                                        //xxx0 : single use
-                                        //xxx1 : will not clear
+                                        if(param_0[0] == 1'b0) begin
+                                            //xxx0 : single use
+                                        end else begin
+                                            //xxx1 : will not clear
+                                        end
                                     end
                                     4'b1000: begin
                                         //1t mask
-                                        //xxx0 : singel use
-                                        //xxx1 : multiple use
+                                        if(param_0[0] == 1'b0) begin
+                                            //xxx0 : single use
+                                        end else begin
+                                            //xxx1 : will not clear
+                                        end
                                     end
                                     4'b1001: begin
                                         //hop micro op 4 trit address
                                         //xxx0 : action
                                         //xxx1 : param
+                                        
+                                        if(param_0[0] == 1'b0) begin
+                                            //xxx0 : action
+                                        end else begin
+                                            //xxx1 : param
+                                        end
                                     end
                                     4'b1010: begin
                                         //read 12 trits of memory to that address (the memory address is overwritten from there)
                                         //this works in conjunction to provide memory read writes
+                                        //this needs to work in conjunction with the memory bus
                                     end
                                 endcase
                             end 
@@ -725,15 +745,17 @@ always @(posedge clk or negedge rst_n) begin
                                 endcase
                             end
                             else begin
+
+                                //will fill this in later
                                 case(command)
                                     4'b0011: begin
-                                        // trit add/subtract
+                                        // trit add/subtract using the alu
                                     end
                                     4'b0100: begin
-                                        
+                                        //mac
                                     end
                                     4'b0101: begin
-                                        
+                                        //  
                                     end
                                     4'b0110: begin
                                         
@@ -759,6 +781,7 @@ always @(posedge clk or negedge rst_n) begin
                                 p_pc_inc_amt = 2'b11;
                             end
 
+
                             //housekeeping stage
                             /*
                             when the alu needs to write to the registers, 
@@ -767,7 +790,7 @@ always @(posedge clk or negedge rst_n) begin
                             and turn off the we and re to all registers
                             since the alu handles writing and blocking assignments will prioritise the last one
                             */
-
+                            //for data to be written, check if the command can skip data masking then either mask or write
                             //data masking stage
                             //write stage
 
@@ -778,92 +801,12 @@ always @(posedge clk or negedge rst_n) begin
                             //during this time you can still request microcode
                         end else begin
                             //Housekeeping
-                            if(alias_addr_12t != 4'b0000) begin
-                                alias_addr_12t <= 4'b0000;
-                                if(alias_addr_12t >= 4'd5) begin
-                                reg_data_to = am_buff_12t;
-                                reg_w_en = 1'b1; // pull this to high for a single clock
-                                end else begin
-                                    case(alias_addr_12t)
-                                        4'd1: begin
-                                            //scratchpad
-                                            //fill scratchpad 
-                                            sp0_full12t = 1'b1;
-                                            sp0_we = 1'b1;
-                                            sp0_din_12T = am_buff_12t;
-                                        end
-                                        4'd2: begin
-                                            //scratchpad
-                                            //fill scratchpad 
-                                            sp0_full12t = 1'b1;
-                                            sp0_we = 1'b1;
-                                            sp0_din_12T = am_buff_12t;
-                                        end
-                                        4'd3: begin
-                                            //scratchpad
-                                            //fill scratchpad 
-                                            flag_full12t = 1'b1;
-                                            flag_we = 1'b1;
-                                            flag_din_12T = am_buff_12t;
-                                        end
-                                        4'd4: begin
-                                            //ladder register
-                                            ladder_full12t = 1'b1;
-                                            ladder_we = 1'b1;
-                                            ladder_full12t = am_buff_12t;
-                                        end
-                                    endcase
-                                end
-                                //also check if this falls into the scratchpad registers /flag registers cause they are different
-                            end
-                            if(alias_active_4t) begin
-                                //4t write
-                                alias_active_4t <= 1'b0;
-                                if(alias_addr_4t < 3'd2) begin
-                                    // 0-2
-                                    //scratchpad 0
-                                    sp0_din_4T = am_buff_4t;
-                                    sp0_we = 1'b1;
-                                end else if (alias_addr_4t < 3'd5) begin
-                                    //3-5
-                                    //scratchpad 1
-                                    sp1_din_4T = am_buff_4t;
-                                    sp1_we = 1'b1;
-                                end
-                                else if (alias_addr_4t == 3'd6) begin
-                                    //action    micrcode is at 6
-                                    //action is stored in the 12T registers
-                                    flag_we = 1'b1;
-                                    flag_din_4T = am_buff_4t;
-                                end
-                                else if (alias_addr_4t == 3'd7) begin
-                                    //parameter micrcode is at 7
-                                    p_pc_we = 1'b1;
-                                    p_pc_wdata = am_buff_4t;
-                                end
-                                case(alias_addr_4t)
-                                    3'd0: sp0_pos  = 2'b01;
-                                    3'd1: sp0_pos  = 2'b10;
-                                    3'd2: sp0_pos  = 2'b11;
-                                    3'd3: sp1_pos  = 2'b01;
-                                    3'd4: sp1_pos  = 2'b10;
-                                    3'd5: sp1_pos  = 2'b11;
-                                    3'd6: flag_pos = 4'b0011;
-                                endcase
-                            end
-                            if(alias_active_1t) begin
-                                //1t write
-                                alias_active_1t <= 1'b0;
-                                flag_din_1T = am_buff_1t;
-                                flag_pos[3] = 1'b1;
-                                flag_pos[2:0] = alias_active_1t;
-                                flag_we = 1'b1;
-                            end
+
                         end
                     end
                 end
 
-            // micro op acquisition section
+            // macro op acquisition section
 
 
 
@@ -916,9 +859,7 @@ always @(posedge clk or negedge rst_n) begin
                         end
                     end
                     //ret micro is now 0
-                    
             end
-
 
             //these are outside of returning micro because they can keep executing / reading the second command while the device is stil ticking
             if(data_valid) begin
@@ -962,7 +903,7 @@ always @(posedge clk or negedge rst_n) begin
                 //even when it's still receiving microcode requests
                 //as well as check if its 11xxxxxx, indicating that the streamed data should be used as a micro op
                 //
-                //for direct execution, its loaded into a separate buffer, splitting the data into aaaa-- bbbbcccc dddd----
+                //for direct execution, its loaded into a separate buffer, splitting the data into 11aaaa-- bbbbcccc dddd----
 
                 //theres also an internal bus connecting the core to my friend, where only thread 0 is in use,
                 // and we are locked to micro op direct execution as well as no memory operations
@@ -976,17 +917,16 @@ end
 
     native_12t_ladder ladder_reg(
         .VDD_1V65(VDD_1V65),
-        
-        r_enable,
-        input w_enable,
-        input full12t,
-        input ladder_pump,
-        input [1:0] position,
+        .r_enable(),
+        .w_enable(),
+        .full12t(),
+        .ladder_pump(),
+        .position(),
         // 00 do nothing,
         // 01 write at position 0
         // 10 write at position 1
         // 11 write at position 2
-        inout [11:0] data_in_12T,
+        .data_in_12T(ladder_din_12T),
         inout [7:0]  data_in_8T,
         inout [3:0]  data_in_4T,
         inout [11:0] data_out_12T,
@@ -1074,11 +1014,41 @@ end
     );
 
 
+    native_b2t_secure flag_1t_converter(
+    .VDD_1V65(VDD_1V65),
+    .B_in_0(flag_reg_bin_b2t_1t[0]),
+    .B_in_1(flag_reg_bin_b2t_1t[1]),
+    .ternary_result(flag_reg_ter_b2t_1t),
+    .decode_error(flag_reg_error_1t),
+    );
+
+    native_b2t_secure carry_1t_converter(
+    .VDD_1V65(VDD_1V65),
+    .B_in_0(carry_bin_b2t_1t[0]),
+    .B_in_1(carry_bin_b2t_1t[1]),
+    .ternary_result(carry_ter_b2t_1t),
+    .decode_error(carry_reg_error_1t),
+    );
+
     //these should NEVER be muxed
     bin_to_4t_secure flag_4t_converter(
     .binary_bits(flag_reg_bin_b2t_4t),
     .ternary_bits(flag_reg_ter_b2t_4t),
     .error(flag_reg_b2t_error_4t),
+    .VDD_1V65(VDD_1V65)
+    );
+
+    bin_to_4t_secure sp0_4t_converter(
+    .binary_bits(sp0_reg_bin_b2t_4t),
+    .ternary_bits(sp0_reg_ter_b2t_4t),
+    .error(sp0_reg_b2t_error_4t),
+    .VDD_1V65(VDD_1V65)
+    );
+    
+    bin_to_4t_secure sp1_4t_converter(
+    .binary_bits(sp1_reg_bin_b2t_4t),
+    .ternary_bits(sp1_reg_ter_b2t_4t),
+    .error(sp1_reg_b2t_error_4t),
     .VDD_1V65(VDD_1V65)
     );
 
@@ -1100,6 +1070,13 @@ end
     .binary_bits(sp1_reg_bin_b2t),
     .ternary_bits(sp1_reg_ter_b2t),
     .error(sp1_reg_b2t_error),
+    .VDD_1V65(VDD_1V65) 
+    );
+
+    bin_to_12t_secure ladd_12t_converter(
+    .binary_bits(ladd_reg_bin_b2t),
+    .ternary_bits(ladd_reg_ter_b2t),
+    .error(ladd_reg_b2t_error),
     .VDD_1V65(VDD_1V65) 
     );
 

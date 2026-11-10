@@ -23,18 +23,6 @@ module tt_um_triple_t_devEclipse2 (
     wire [7:0] uio_out_000, uio_out_001, uio_out_111, uio_out_def;
     wire [7:0] uio_oe_000,  uio_oe_001,  uio_oe_111,  uio_oe_def;
 
-    logic_container main_module(
-
-        VDD_1V65(ua[0]),
-        .ui_in(ui_in),    // Dedicated inputs (Pins 0-7)
-        .uo_out(uo_def),   // Dedicated outputs (Pins 16-23)
-        .uio_in(uio_in),   // IOs: Input path (Pins 8-15)
-        .uio_out(uio_out_def),  // IOs: Output path (Pins 8-15)
-        .uio_oe(uio_oe_def),   // IOs: Enable path (active high: 1=drive, 0=high-Z)
-        .clk(clk),
-        .rst_n(rst_n),
-    );
-
     logic_tester testbench(
 
         VDD_1V65(ua[0]),
@@ -48,7 +36,6 @@ module tt_um_triple_t_devEclipse2 (
     );
 
     //out from commander
-    wire [7:0] commander_uo_out;
     wire [7:0] commander_tracker_data;
     wire [7:0] commander_tracker_enable;
 
@@ -93,7 +80,7 @@ module tt_um_triple_t_devEclipse2 (
         .ui_in                  (ui_in), 
         
         // Output routing
-        .uo_out                 (commander_uo_out),
+        .uo_out                 (uo_001),
         // Telemetry bus to external MUX (routes selected error counter to uio_out when show_tracker=1)
         .tracker                (commander_tracker_data),
         .show_tracker           (commander_tracker_enable),
@@ -152,19 +139,23 @@ module tt_um_triple_t_devEclipse2 (
     always @(*) begin
         case (mux_sel)
             3'b000: begin
+                //debug
                 uo_out_reg  = uo_000;
                 uio_out_reg = uio_out_000;
                 uio_oe_reg  = uio_oe_000;
             end
             3'b001: begin
+                //core overlord
                 uo_out_reg  = uo_001;
-                uio_out_reg = uio_out_def;
-                uio_oe_reg  = uio_oe_def;
+                uio_out_reg = commander_tracker_enable? commander_tracker_data : uio_out_def;
+                uio_oe_reg  = commander_tracker_enable? 8'b11111111 : uio_oe_def;
             end
             3'b111: begin
-                uo_out_reg  = uo_111;
+                //le epic standalone mode
+                // this one has internal sram!
                 uio_out_reg = uio_out_111;
-                uio_oe_reg  = uio_oe_111;
+                uio_out_reg = uio_oe_111;
+                uo_out_reg = uo_111;
             end
             default: begin // Covers 010, 011, 100, 101, 110
                 uo_out_reg  = uo_def;
